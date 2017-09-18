@@ -1,0 +1,3 @@
+source 'http://github.com/CocoaPods/Specs.git'
+pod 'ArcGIS-Runtime-SDK-iOS'
+
