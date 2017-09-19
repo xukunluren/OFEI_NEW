@@ -15,7 +15,7 @@
 #import "NormalViewController.h"
 #import "DiyTheme.h"
 #import "dataAnaly.h"
-
+#import "MyRequest.h"
 @interface flowViewController ()<UITableViewDelegate,UITableViewDataSource,UIScrollViewDelegate,CPTPlotSpaceDelegate,CPTScatterPlotDelegate>
 
 {
@@ -44,7 +44,7 @@
     
     NSMutableArray *datasForPlot;
     UIImageView *zoneA;
-    
+        NSMutableArray *_array;
     NSUInteger *_indexOfSymbol;
     
     NSMutableArray *_dataJQ;
@@ -115,43 +115,14 @@
     [self setNavTitle:_title];
     
     [self initTableAndPicture];
-    NSArray *dateArray1 = [self getDataFromNet:_title];
-//    NSLog(@"%@",dateArray1);
-    [self setXY:dateArray1];
+   [self getDataFromNet:_title];
+//    [self setXY:dateArray1];
     [self setTextNoRefesh];
 }
 
-//- (void)viewWillDisappear:(BOOL)animated
-//{
-//    self.tabBarController.tabBar.hidden = YES;
-//    
-//}
 
 -(void)setNavTitle:(NSString *)title
 {
-
-    
-//    UIView *middle = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
-//    UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
-//    select.frame = CGRectMake(15, 0, 40, 40);
-//    [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];
-//    [select addTarget:self action:@selector(selectPoint) forControlEvents:UIControlEventTouchUpInside];
-//    
-//    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-//    label.backgroundColor = [UIColor clearColor];
-//    label.frame = CGRectMake(0, 10, 40, 40);
-//    label.font = [UIFont boldSystemFontOfSize:16.0];
-//    label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor]; // change this color
-//    _titleLabel = label;
-//    _titleLabel.text = _title;
-//    [_titleLabel sizeToFit];
-//    [middle addSubview:select];
-//    [middle addSubview:label];
-//    
-//    [label sizeToFit];
-//    self.navigationItem.titleView = middle;
-    
     UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
     select.frame = CGRectMake(0, 0, 60, 40);
     _titleLabel.text = _title;
@@ -414,6 +385,24 @@
     }
     return url;
 }
+-(NSString *)judgePointWithStr:(NSString *)point
+{
+    NSString *url;
+    if ([point isEqualToString:@"A点"]) {
+        url= [NSString stringWithFormat:@KPointcurrentA];
+    }
+    if ([point isEqualToString:@"B点"]) {
+        url= [NSString stringWithFormat:@KPointcurrentB];
+    }
+    if ([point isEqualToString:@"C点"]) {
+        url= [NSString stringWithFormat:@KPointcurrentC];
+    }
+    if ([point isEqualToString:@"D点"]) {
+        url= [NSString stringWithFormat:@KPointcurrentD];
+    }
+    return url;
+}
+
 
 
 #pragma 设置初始化图表控件----xk
@@ -602,108 +591,85 @@
 
 
 //获取网络数据
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
     
-    NSLog(@"标题是===%@",title);
-    NSURL *url = [self judgePoint:title];
-    NSLog(@"url是===%@",url);
-    //第一步，创建URL
-    
-  
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+
+    NSString *url = [self judgePointWithStr:title];
     [_datetimeArray removeAllObjects];
     [_valueArray removeAllObjects];
     
     [_windDirForTu removeAllObjects];
     [datasForPlot removeAllObjects];
     [_dataJQ removeAllObjects];
-
     
-    NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-
-    NSString *pubtime1 = [pubtime substringToIndex:10];
-    _publishTime = pubtime1;
-    for (int i = 0; i<array.count; i++) {
-        NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-        NSString *publishtime1 = [publishtime substringToIndex:10];
-        if ([publishtime1 isEqualToString:pubtime1]) {
-            
-            NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-            NSString *jiequ = [dateString1 substringToIndex:10];
-            if ([jiequ isEqualToString:publishtime1]) {
-                [_similarLength addObject:jiequ];
-            }
-            NSString *dateString = [_datAnaly stringForAnaly:dateString1];
-            
-            
-            NSNumber *windspeed = [array[i] objectForKey:@"power"];
-            
-            CGFloat windhigh2 = [windspeed doubleValue];
-            NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
-            
-            
-            NSNumber *winddir = [array[i] objectForKey:@"dir"];
-            NSString *windDirecion =[_datAnaly judgeDirectionPower:winddir];
-            
-            
-            [_windDirForTu addObject:windDirecion];
-            
-            [datasForPlot addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:dateString,@"date",windhigh,@"speed",windDirecion,@"direct", nil]];
-            
-            
-            [_datetimeArray addObject:dateString];
-            [_valueArray addObject:windhigh];
-            [_dataJQ addObject:jiequ];
-            
-        }
-    }
-
-    
-    
-    for (int i=0; i<_valueArray.count; i++) {
-        NSLog(@"你好-----%@",_valueArray[i]);
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
-        NSString  *value = _valueArray[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
-        NSLog(@"%@===%f",_datetimeArray[i],y1[i]);
-    }
-    return _datetimeArray;
+        
+        NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        
+        NSString *pubtime1 = [pubtime substringToIndex:10];
+        _publishTime = pubtime1;
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                NSString *jiequ = [dateString1 substringToIndex:10];
+                if ([jiequ isEqualToString:publishtime1]) {
+                    [_similarLength addObject:jiequ];
+                }
+                NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+                
+                
+                NSNumber *windspeed = [_array[i] objectForKey:@"power"];
+                
+                CGFloat windhigh2 = [windspeed doubleValue];
+                NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
+                
+                
+                NSNumber *winddir = [_array[i] objectForKey:@"dir"];
+                NSString *windDirecion =[_datAnaly judgeDirectionPower:winddir];
+                
+                
+                [_windDirForTu addObject:windDirecion];
+                
+                [datasForPlot addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:dateString,@"date",windhigh,@"speed",windDirecion,@"direct", nil]];
+                
+                
+                [_datetimeArray addObject:dateString];
+                [_valueArray addObject:windhigh];
+                [_dataJQ addObject:jiequ];
+                
+            }
+        }
+        
+        
+        
+        for (int i=0; i<_valueArray.count; i++) {
+            NSLog(@"你好-----%@",_valueArray[i]);
+            
+            NSString  *value = _valueArray[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+            NSLog(@"%@===%f",_datetimeArray[i],y1[i]);
+        }
+        
+        [self setXY:_datetimeArray];
+        [graph reloadData];
+        [_flowTable reloadData];
+    } failure:^(NSError *error) {
+        
+    }];
     
 }
 
 //初始化不需要刷新的控件
 -(void)setTextNoRefesh
 {
-//    UILabel *unitName = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.5, 0.15*KHight, 100, 40)];
-//    unitName.text = @"国家海洋局";
-//    unitName.textAlignment = UITextAlignmentCenter;
-//    unitName.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:18];
-//    [self.view addSubview:unitName];
-//    UILabel *unitName1 = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.5, 0.2*KHight, 150, 40)];
-//    unitName1.text = @"东海预报中心";
-//    //    unitName1.textAlignment = NSTextAlignmentCenter;
-//    unitName.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:18];
-//    [self.view addSubview:unitName1];
-//    
-//    UILabel *label2 = [[UILabel alloc] initWithFrame:CGRectMake(KWight*0.5, 0.19*KHight, KWight*0.5, 0.2*KHight)];
-//    label2.text = @"数据时间:2015-11-25 09:30";
-//    label2.font = [UIFont systemFontOfSize:12.0];
-//    label2.textColor = [UIColor blackColor];
-//    [self.view addSubview:label2];
-    
     UILabel *unitName = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.15, 0.08 *KHight, KWight*0.5, 0.2*KHight)];
     unitName.numberOfLines = 0;
     unitName.text = @"国家海洋局\n东海预报中心";

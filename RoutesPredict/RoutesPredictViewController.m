@@ -113,16 +113,10 @@
 }
 
 -(void)back{
-    //    normal = [[NormalViewController alloc] init];
-    //    UINavigationController *navi = [[UINavigationController alloc] initWithRootViewController:normal];
-    //    [self presentViewController:navi animated:YES completion:^{
-    //    }];
     
     [self dismissViewControllerAnimated:YES completion:^{
         
-        
     }];
-    //    [self.navigationController popToRootViewControllerAnimated:YES];
     
 }
 

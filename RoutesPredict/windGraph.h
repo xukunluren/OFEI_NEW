@@ -26,7 +26,7 @@
 
 - (NSString *)backwithTitle:(NSString *)title;
 -(NSURL *)judgeRoutes:(NSString *)title;
--(NSArray *)getDataFromNet:(NSString *)title;
+-(void)getDataFromNet:(NSString *)title;
 @property(nonatomic,strong)NSString *title;
 @property ( nonatomic , strong ) CPTGraphHostingView * hostView;
 //@property(nonatomic,strong)NSMutableArray *flowTimeArr;

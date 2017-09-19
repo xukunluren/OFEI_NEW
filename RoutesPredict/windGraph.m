@@ -11,14 +11,14 @@
 #import "fllViewController.h"
 #import "DiyTheme.h"
 #import "dataAnaly.h"
-
+#import "MyRequest.h"
 @implementation windGraph
 {
     NSMutableArray *_windTimeArr;
     NSMutableArray *_windValueArr;
     NSMutableArray *_keduArray;
     NSMutableArray *_windDir;
-    
+    NSMutableArray *_array;
     dataAnaly *_dataAnaly;
     fllViewController *fll;
     NSUInteger *_indexOfSymbol;
@@ -38,7 +38,7 @@
         _windValueArr = [[NSMutableArray alloc]init];
         _windDir = [[NSMutableArray alloc]init];
         _keduArray = [[NSMutableArray alloc]init];
-        
+        _array = [[NSMutableArray alloc] init];
         _dataJQ = [[NSMutableArray alloc]init];
         _similarLength = [[NSMutableArray alloc]init];
         _dataAnaly = [[dataAnaly alloc]init];
@@ -67,19 +67,14 @@
     detail.font = [UIFont fontWithName:@"Arial" size:12];
     detail.textAlignment = NSTextAlignmentLeft;
     detail.numberOfLines = 0;
-//    detail.backgroundColor = [UIColor blackColor];
-//    detail.textColor = [UIColor whiteColor];
-    //    detial.alpha = 0.4;
-    //    detial.text = @"日期:  潮高(m):";
     [self addSubview:detail];
     
     CPTTheme *theme = [[DiyTheme alloc] init];
     [graph applyTheme:theme];
        
-    NSArray *dateArray = [self getDataFromNet:_title];
+    [self getDataFromNet:_title];
     [self initGraph];
-        NSLog(@"%lu",(unsigned long)dateArray.count);
-    [self setXY:dateArray];
+
     
 }
 
@@ -129,82 +124,143 @@
 //    [self setXY:dateArray1];
 }
 
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
-    NSLog(@"zey%@",title);
-    NSURL *url;
-    //第一步，创建URL
-    url = [self judgeRoutes:title];
-    NSLog(@"url是===%@",url);
     
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+    [_windTimeArr removeAllObjects];
+    [_windValueArr removeAllObjects];
+    [_windDir removeAllObjects];
+    [_dataJQ removeAllObjects];
     
     
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
-
-        [_windTimeArr removeAllObjects];
-        [_windValueArr removeAllObjects];
-        [_windDir removeAllObjects];
-        [_dataJQ removeAllObjects];
-    if (array.count == 0) {
+     NSString *url;
+    url = [self judgeRoutesWithStr:title];
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
+        if (_array.count == 0) {
+            
+            for (int i=0; i<num; i++) {
+                NSString *datestring = @"0";
+                NSNumber *windspeed = @(0);
+                NSString *windDir = @"0";
+                [_windTimeArr addObject:datestring];
+                [_windValueArr addObject:windspeed];
+                [_windDir addObject:windDir];
+            }
+            
+        }else{
+            NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+            NSString *pubtime1 = [pubtime substringToIndex:10];
+            _publishTime = pubtime1;
+            for (NSDictionary *dic in _array) {
+                
+                
+                NSString *dateString1 = [dic objectForKey:@"datatime"];
+                NSString *jiequ = [dateString1 substringToIndex:10];
+                if ([jiequ isEqualToString:_publishTime]) {
+                    [_similarLength addObject:jiequ];
+                }
+                NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
+                NSNumber *windspeed = [dic objectForKey:@"power"];
+                NSNumber *winddir = [dic objectForKey:@"dir"];
+                NSString *windDirection = [_dataAnaly judgeDirectionPower:winddir];
+                
+                [_windTimeArr addObject:dateString];
+                [_windValueArr addObject:windspeed];
+                [_windDir addObject:windDirection];
+                [_dataJQ addObject:jiequ];
+                
+            }
+            
+        }
+        
         
         for (int i=0; i<num; i++) {
-            NSString *datestring = @"0";
-            NSNumber *windspeed = @(0);
-            NSString *windDir = @"0";
-            [_windTimeArr addObject:datestring];
-            [_windValueArr addObject:windspeed];
-            [_windDir addObject:windDir];
+            
+            
+            
+            NSString  *value = _windValueArr[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+            
         }
-      
-    }else{
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        _publishTime = pubtime1;
-    for (NSDictionary *dic in array) {
+        detail.text = @" ";
+        _indexOfSymbol = 200;
+        [graph reloadData];
+        [self setXY:_windTimeArr];
         
+//        [self setXY:_datetimeArray];
+//        [graph reloadData];
+//        [_windTable reloadData];
         
-        NSString *dateString1 = [dic objectForKey:@"datatime"];
-        NSString *jiequ = [dateString1 substringToIndex:10];
-        if ([jiequ isEqualToString:_publishTime]) {
-            [_similarLength addObject:jiequ];
-        }
-        NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
-        NSNumber *windspeed = [dic objectForKey:@"power"];
-        NSNumber *winddir = [dic objectForKey:@"dir"];
-        NSString *windDirection = [_dataAnaly judgeDirectionPower:winddir];
+    } failure:^(NSError *error) {
         
-        [_windTimeArr addObject:dateString];
-        [_windValueArr addObject:windspeed];
-        [_windDir addObject:windDirection];
-        [_dataJQ addObject:jiequ];
-
-    }
-        
-    }
+    }];
     
-   
-    for (int i=0; i<num; i++) {
-        
-       
-        
-        NSString  *value = _windValueArr[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
-
-    }
-    detail.text = @" ";
-    _indexOfSymbol = 200;
-    [graph reloadData];
-    return _windTimeArr;
+//    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
+//    
+//    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
+//    //第三步，连接服务器
+//    
+//    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+//    
+//    
+//    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+//
+//    
+//    if (array.count == 0) {
+//        
+//        for (int i=0; i<num; i++) {
+//            NSString *datestring = @"0";
+//            NSNumber *windspeed = @(0);
+//            NSString *windDir = @"0";
+//            [_windTimeArr addObject:datestring];
+//            [_windValueArr addObject:windspeed];
+//            [_windDir addObject:windDir];
+//        }
+//      
+//    }else{
+//        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
+//        NSString *pubtime1 = [pubtime substringToIndex:10];
+//        _publishTime = pubtime1;
+//    for (NSDictionary *dic in array) {
+//        
+//        
+//        NSString *dateString1 = [dic objectForKey:@"datatime"];
+//        NSString *jiequ = [dateString1 substringToIndex:10];
+//        if ([jiequ isEqualToString:_publishTime]) {
+//            [_similarLength addObject:jiequ];
+//        }
+//        NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
+//        NSNumber *windspeed = [dic objectForKey:@"power"];
+//        NSNumber *winddir = [dic objectForKey:@"dir"];
+//        NSString *windDirection = [_dataAnaly judgeDirectionPower:winddir];
+//        
+//        [_windTimeArr addObject:dateString];
+//        [_windValueArr addObject:windspeed];
+//        [_windDir addObject:windDirection];
+//        [_dataJQ addObject:jiequ];
+//
+//    }
+//        
+//    }
+//    
+//   
+//    for (int i=0; i<num; i++) {
+//        
+//       
+//        
+//        NSString  *value = _windValueArr[i];
+//        double yy = value.doubleValue;
+//        y1[i] = yy;
+//        xl[i] = i;
+//
+//    }
+//    detail.text = @" ";
+//    _indexOfSymbol = 200;
+//    [graph reloadData];
+//    return _windTimeArr;
 }
 
 -(NSURL *)judgeRoutes:(NSString *)title
@@ -221,6 +277,25 @@
     }
     if ([title isEqualToString:@"凤凰山南堤航线"]) {
         url= [NSURL URLWithString:KRouteWindP4];
+    }
+    //    NSLog(@"您选择的区域是%@",url);
+    return url;
+}
+
+-(NSString *)judgeRoutesWithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"霓屿山北堤航线"]) {
+        url= [NSString stringWithFormat:KRouteWindP1];
+    }
+    if ([title isEqualToString:@"霓屿山东堤北段航线"]) {
+        url= [NSString stringWithFormat:KRouteWindP2];
+    }
+    if ([title isEqualToString:@"凤凰山东堤南段航线"]) {
+        url= [NSString stringWithFormat:KRouteWindP3];
+    }
+    if ([title isEqualToString:@"凤凰山南堤航线"]) {
+        url= [NSString stringWithFormat:KRouteWindP4];
     }
     //    NSLog(@"您选择的区域是%@",url);
     return url;

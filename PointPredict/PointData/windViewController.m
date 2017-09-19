@@ -157,10 +157,7 @@
     [self setNavTitle:_title];
    
     [self initTableAndPicture];
-//    NSArray *dateArray1 = [self  getDataFromNet:_title];
     [self  getDataFromNet:_title];
-//    [self setXY:dateArray1];
-    
     [self setTextNoRefesh];
    
 }
@@ -326,7 +323,7 @@
         //[self setXY:dateArray1];
         detail.text = @" ";
         _indexOfSymbol = 200;
-        [graph reloadData];
+//        [graph reloadData];
         
     } animated:YES];
 }
@@ -610,6 +607,24 @@
     return url;
 }
 
+-(NSString *)judgePointWithStr:(NSString *)title
+{
+    NSString *url;
+    
+    if ([title isEqualToString:@"A点"]) {
+        url= [NSString stringWithFormat:@KPointwindA];
+    }
+    if ([title isEqualToString:@"B点"]) {
+        url= [NSString stringWithFormat:@KPointwindB];
+    }
+    if ([title isEqualToString:@"C点"]) {
+        url= [NSString stringWithFormat:@KPointwindC];
+    }
+    if ([title isEqualToString:@"D点"]) {
+        url= [NSString stringWithFormat:@KPointwindD];
+    }
+    return url;
+}
 
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
@@ -778,8 +793,8 @@
     [_windDirForTu removeAllObjects];
     [datasForPlot removeAllObjects];
     [_dataJQ removeAllObjects];
-    
-    [MyRequest GET:@"http://xxs.dhybzx.org:8888/OFT/GetTBVECGRIDWIND_A" CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    NSString *url = [self judgePointWithStr:_title];
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
         NSString *pubtime1 = [pubtime substringToIndex:10];
@@ -830,6 +845,8 @@
             NSLog(@"%@===%f",_datetimeArray[i],y1[i]);
         }
         [self setXY:_datetimeArray];
+        [graph reloadData];
+        [_windTable reloadData];
         
     } failure:^(NSError *error) {
         
@@ -871,9 +888,6 @@
 -(CPTPlotSymbol *)symbolForScatterPlot:(CPTScatterPlot *)plot
                            recordIndex:(NSUInteger)index
 {
-    
-    NSLog(@"%@",_windDirForTu[index]);
-    NSLog(@"%lu",(unsigned long)_indexOfSymbol);
     
     CPTMutableLineStyle * symbolLineStyle = [CPTMutableLineStyle lineStyle];
     

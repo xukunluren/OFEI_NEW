@@ -149,27 +149,6 @@
 
 -(void)setNavTitle:(NSString *)title
 {
-
-//    UIView *middle = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 100, 40)];
-//    UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
-//    select.frame = CGRectMake(40, 10, 40, 40);
-//    [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];
-//    [select addTarget:self action:@selector(selectRoutes) forControlEvents:UIControlEventTouchUpInside];
-//    
-//    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-//    label.backgroundColor = [UIColor clearColor];
-//    label.frame = CGRectMake(0, 10, 60, 40);
-//    label.font = [UIFont boldSystemFontOfSize:16.0];
-//    label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor]; // change this color
-//    _titleLabel = label;
-//    _titleLabel.text = _title;
-//    [_titleLabel sizeToFit];
-//    [middle addSubview:select];
-//    [middle addSubview:label];
-//    
-//    [label sizeToFit];
-//    self.navigationItem.titleView = middle;
     UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
     select.frame = CGRectMake(0, 0, 200, 40);
     [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];

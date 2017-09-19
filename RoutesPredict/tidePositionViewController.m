@@ -17,7 +17,7 @@
 #import "dataAnaly.h"
 #import "DiyTheme.h"
 #import "FYChartView.h"
-
+#import "MyRequest.h"
 #define num 100
 
 @interface tidePositionViewController ()<UITableViewDataSource,UITableViewDelegate,CNPGridMenuDelegate,CPTPlotDataSource,CPTPlotSpaceDelegate,CPTAxisDelegate,CPTScatterPlotDataSource,FYChartViewDataSource>
@@ -25,6 +25,7 @@
     double xl[num];//散点的x坐标
     double y1[num];//第1个散点图的y坐标
     double db[2];
+    
 }
 @property (nonatomic, strong) CNPGridMenu *gridMenu;
 
@@ -37,7 +38,7 @@
 {
     NSString *_title;
     UIButton *_upButton;
-    
+    NSMutableArray *_array;
     UILabel *_titleLabel;
     NSMutableArray *timeArr;
     NSMutableArray *valueArr;
@@ -77,7 +78,7 @@
     valueArr = [[NSMutableArray alloc]init];
     _datAnaly = [[dataAnaly alloc] init];
     _keduArray = [[NSMutableArray alloc] init];
-    
+    _array = [[NSMutableArray alloc] init];
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
     _indexOfSymbol = 200;
@@ -100,37 +101,18 @@
     detial.font = [UIFont fontWithName:@"Arial" size:14];
     detial.textAlignment = NSTextAlignmentLeft;
     detial.numberOfLines = 0;
-//    detial.backgroundColor = [UIColor blackColor];
-//    detial.alpha = 0.4;
-//    detial.text = @"日期:  潮高(m):";
     [self.view addSubview:detial];
     
     [self initTableAndPicture];
     
-    NSArray *dateArray1 = [self  getDataFromNet:_title];
-    [self setXY:dateArray1];
+    [self  getDataFromNet:_title];
     
     [self setButton];
     [self setNavTitle:_title];
-//    [self setMapView:_title];
-//    [self changeView];
-    [self  getDataFromNet:_title];
    
     [self setTextNoRefesh];
     
 }
-//滑动切换视图
-//-(void)changeView
-//{
-//    self.leftSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(handleSwipes:)];
-//    self.rightSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(handleSwipes:)];
-//    
-//    self.leftSwipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionLeft;
-//    self.rightSwipeGestureRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
-//    
-//    [self.view addGestureRecognizer:self.leftSwipeGestureRecognizer];
-//    [self.view addGestureRecognizer:self.rightSwipeGestureRecognizer];
-//}
 //手势滑动  并且刷新
 - (void)handleSwipes:(UISwipeGestureRecognizer *)sender
 {
@@ -356,85 +338,138 @@
 
 
 #pragma MARK - 网络数据获取图的展示
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
+    
+    
     //第一步，创建URL
-    NSURL *url = [self judgeRoutes:_title];
-    NSLog(@"url是===%@",url);
-    
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+    NSString *url = [self judgeRoutesWithStr:_title];
     [timeArr removeAllObjects];
     [valueArr removeAllObjects];
     [_dataJQ removeAllObjects];
-//    for (NSDictionary *dic in array) {
-//        
-//        
-//        NSString *dateString1 = [dic objectForKey:@"dataTime"];
-//        NSString *dateString = [_datAnaly stringForAnaly:dateString1];
-//        
-//        NSNumber *windspeed = [dic objectForKey:@"POWER"];
-//        
-//        
-//        
-//        [timeArr addObject:dateString];
-//        [valueArr addObject:windspeed];
-//        
-//        
-//    }
-    
-    NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-   
-    
-    NSString *pubtime1 = [pubtime substringToIndex:10];
-    _publishTime = pubtime1;
-    
-    
-    for (int i = 0; i<array.count; i++) {
-        NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-        NSString *publishtime1 = [publishtime substringToIndex:10];
-        NSString *varname = [array[i] objectForKey:@"varname"];
-        if ([publishtime1 isEqualToString:pubtime1]&&[varname isEqualToString:@"TIDE"]) {
-            
-            NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-            NSString *jiequ = [dateString1 substringToIndex:10];
-            if ([jiequ isEqualToString:publishtime1]) {
-                [_similarLength addObject:jiequ];
-            }
-            NSString *dateString = [_datAnaly stringForAnaly:dateString1];
-            
-            NSNumber *tideHigh = [array[i] objectForKey:@"power"];
-            CGFloat tideHigh1 = [tideHigh doubleValue];
-            NSString *tideHigh2 = [NSString stringWithFormat:@"%.2f",tideHigh1];
-            
-            [timeArr addObject:dateString];
-            [valueArr addObject:tideHigh2];
-            
-            [_dataJQ addObject:jiequ];
-        }
-    }
-    
-    for (int i=0; i<valueArr.count; i++) {
-        NSLog(@"你好-----%@",valueArr[i]);
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
-        NSString  *value = valueArr[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
-//        NSString  *ii = [NSString stringWithFormat:@"%d",i];
-//        [_interArray addObject:ii];
-//        NSLog(@"%@===%f",timeArr[i],y1[i]);
-    }
-    return timeArr;
+        NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        
+        
+        NSString *pubtime1 = [pubtime substringToIndex:10];
+        _publishTime = pubtime1;
+        
+        
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            NSString *varname = [_array[i] objectForKey:@"varname"];
+            if ([publishtime1 isEqualToString:pubtime1]&&[varname isEqualToString:@"TIDE"]) {
+                
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                NSString *jiequ = [dateString1 substringToIndex:10];
+                if ([jiequ isEqualToString:publishtime1]) {
+                    [_similarLength addObject:jiequ];
+                }
+                NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+                
+                NSNumber *tideHigh = [_array[i] objectForKey:@"power"];
+                CGFloat tideHigh1 = [tideHigh doubleValue];
+                NSString *tideHigh2 = [NSString stringWithFormat:@"%.2f",tideHigh1];
+                
+                [timeArr addObject:dateString];
+                [valueArr addObject:tideHigh2];
+                
+                [_dataJQ addObject:jiequ];
+            }
+        }
+        
+        for (int i=0; i<valueArr.count; i++) {
+            NSLog(@"你好-----%@",valueArr[i]);
+            
+            NSString  *value = valueArr[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+                    }
+        
+        
+        
+        [graph reloadData];
+        [self setXY:timeArr];
+        [_tidePositionTable reloadData];
+        
+    } failure:^(NSError *error) {
+        
+    }];
+//    //第二步，通过URL创建网络请求
+//    
+//    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
+//    
+//    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
+//    //第三步，连接服务器
+//    
+//    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+//    
+//    
+//    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+//   
+////    for (NSDictionary *dic in array) {
+////        
+////        
+////        NSString *dateString1 = [dic objectForKey:@"dataTime"];
+////        NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+////        
+////        NSNumber *windspeed = [dic objectForKey:@"POWER"];
+////        
+////        
+////        
+////        [timeArr addObject:dateString];
+////        [valueArr addObject:windspeed];
+////        
+////        
+////    }
+//    
+//    NSString *pubtime = [array[0] objectForKey:@"publishtime"];
+//   
+//    
+//    NSString *pubtime1 = [pubtime substringToIndex:10];
+//    _publishTime = pubtime1;
+//    
+//    
+//    for (int i = 0; i<array.count; i++) {
+//        NSString *publishtime = [array[i] objectForKey:@"publishtime"];
+//        NSString *publishtime1 = [publishtime substringToIndex:10];
+//        NSString *varname = [array[i] objectForKey:@"varname"];
+//        if ([publishtime1 isEqualToString:pubtime1]&&[varname isEqualToString:@"TIDE"]) {
+//            
+//            NSString *dateString1 = [array[i] objectForKey:@"datatime"];
+//            NSString *jiequ = [dateString1 substringToIndex:10];
+//            if ([jiequ isEqualToString:publishtime1]) {
+//                [_similarLength addObject:jiequ];
+//            }
+//            NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+//            
+//            NSNumber *tideHigh = [array[i] objectForKey:@"power"];
+//            CGFloat tideHigh1 = [tideHigh doubleValue];
+//            NSString *tideHigh2 = [NSString stringWithFormat:@"%.2f",tideHigh1];
+//            
+//            [timeArr addObject:dateString];
+//            [valueArr addObject:tideHigh2];
+//            
+//            [_dataJQ addObject:jiequ];
+//        }
+//    }
+//    
+//    for (int i=0; i<valueArr.count; i++) {
+//        NSLog(@"你好-----%@",valueArr[i]);
+//        
+//        NSString  *value = valueArr[i];
+//        double yy = value.doubleValue;
+//        y1[i] = yy;
+//        xl[i] = i;
+////        NSString  *ii = [NSString stringWithFormat:@"%d",i];
+////        [_interArray addObject:ii];
+////        NSLog(@"%@===%f",timeArr[i],y1[i]);
+//    }
+//    return timeArr;
     
 }
 
@@ -871,9 +906,6 @@
         [self judgeRoutes:_title];
         [_tidePositionTable reloadData];
         [self getDataFromNet:_title];
-        
-        //NSArray *dateArray1 = [self  getDataFromNet:_title];
-        //[self setXY:dateArray1];
         detial.text = @" ";
         _indexOfSymbol = 200;
         [graph reloadData];
@@ -936,6 +968,25 @@
     }
     if ([title isEqualToString:@"凤凰山南堤航线"]) {
         url= [NSURL URLWithString:KRouteTideP4];
+    }
+    NSLog(@"您选择的区域是%@",url);
+    return url;
+}
+
+-(NSString *)judgeRoutesWithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"霓屿山北堤航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP1];
+    }
+    if ([title isEqualToString:@"霓屿山东堤北段航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP2];
+    }
+    if ([title isEqualToString:@"凤凰山东堤南段航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP3];
+    }
+    if ([title isEqualToString:@"凤凰山南堤航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP4];
     }
     NSLog(@"您选择的区域是%@",url);
     return url;

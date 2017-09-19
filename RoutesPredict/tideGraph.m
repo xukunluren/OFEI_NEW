@@ -9,7 +9,7 @@
 #import "tideGraph.h"
 #import "OFeiCommon.h"
 #import "tidePositionViewController.h"
-
+#import "MyRequest.h"
 @implementation tideGraph
 {
     NSMutableArray *_tideTimeArr;
@@ -17,6 +17,7 @@
     NSMutableArray *_keduArray;
      CPTPlotRange *_yplotRange;
      CPTPlotRange *_xplotRange;
+    NSMutableArray *_array;
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -25,7 +26,7 @@
     if (self) {
         _tideTimeArr = [[NSMutableArray alloc]init];
         _tideValueArr = [[NSMutableArray alloc]init];
-        
+        _array = [[NSMutableArray alloc] init];
          _yplotRange = [CPTPlotRange plotRangeWithLocation:@(-3.0) length:@(6)];
         NSLog(@"%@",_title);
         
@@ -47,10 +48,10 @@
 - (void)drawRect:(CGRect)rect {
     NSLog(@"%@",_title);
     
-    NSArray *dateArray = [self getDataFromNet:_title];
+    [self getDataFromNet:_title];
     [self initGraph];
-    NSLog(@"%lu",(unsigned long)dateArray.count);
-    [self setXY:dateArray];
+
+   
     
 }
 
@@ -96,64 +97,105 @@
     //    [self setXY:dateArray1];
 }
 
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
-    NSLog(@"zey%@",title);
-    NSURL *url;
-    //第一步，创建URL
-    url = [self judgeRoutes:title];
-    NSLog(@"url是===%@",url);
-    
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
-    
     [_tideTimeArr removeAllObjects];
     [_tideValueArr removeAllObjects];
-    
-    
-    
-    if (array.count == 0) {
+
+    NSString *url;
+    //第一步，创建URL
+    url = [self judgeRoutesWithStr:title];
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
+        
+        
+        if (_array.count == 0) {
+            for (int i=0; i<num; i++) {
+                NSString *datestring = @"0";
+                NSNumber *windspeed = @(0);
+                [_tideTimeArr addObject:datestring];
+                [_tideValueArr addObject:windspeed];
+            }
+        }else{
+            for (NSDictionary *dic in _array) {
+                
+                
+                NSString *dateString1 = [dic objectForKey:@"datatime"];
+                
+                NSNumber *windspeed = [dic objectForKey:@"power"];
+                
+                [_tideTimeArr addObject:dateString1];
+                [_tideValueArr addObject:windspeed];
+            }
+        }
+        
+        
         for (int i=0; i<num; i++) {
-            NSString *datestring = @"0";
-            NSNumber *windspeed = @(0);
-            [_tideTimeArr addObject:datestring];
-            [_tideValueArr addObject:windspeed];
+            
+            
+            
+            NSString  *value = _tideValueArr[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+            
         }
-    }else{
-        for (NSDictionary *dic in array) {
-            
-            
-            NSString *dateString1 = [dic objectForKey:@"datatime"];
-            
-            NSNumber *windspeed = [dic objectForKey:@"power"];
-            
-            [_tideTimeArr addObject:dateString1];
-            [_tideValueArr addObject:windspeed];
-        }
-    }
+        [graph reloadData];
+        [self setXY:_tideTimeArr];
+     
+    } failure:^(NSError *error) {
+        
+    }];
     
-    
-    for (int i=0; i<num; i++) {
-        
-        
-        
-        NSString  *value = _tideValueArr[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
-        
-    }
-    [graph reloadData];
-    return _tideTimeArr;
+//    //第二步，通过URL创建网络请求
+//    
+//    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
+//    
+//    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
+//    //第三步，连接服务器
+//    
+//    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+//    
+//    
+//    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+//    
+//   
+//    
+//    
+//    
+//    if (array.count == 0) {
+//        for (int i=0; i<num; i++) {
+//            NSString *datestring = @"0";
+//            NSNumber *windspeed = @(0);
+//            [_tideTimeArr addObject:datestring];
+//            [_tideValueArr addObject:windspeed];
+//        }
+//    }else{
+//        for (NSDictionary *dic in array) {
+//            
+//            
+//            NSString *dateString1 = [dic objectForKey:@"datatime"];
+//            
+//            NSNumber *windspeed = [dic objectForKey:@"power"];
+//            
+//            [_tideTimeArr addObject:dateString1];
+//            [_tideValueArr addObject:windspeed];
+//        }
+//    }
+//    
+//    
+//    for (int i=0; i<num; i++) {
+//        
+//        
+//        
+//        NSString  *value = _tideValueArr[i];
+//        double yy = value.doubleValue;
+//        y1[i] = yy;
+//        xl[i] = i;
+//        
+//    }
+//    [graph reloadData];
+//    return _tideTimeArr;
 }
 
 -(NSURL *)judgeRoutes:(NSString *)title
@@ -171,7 +213,24 @@
     if ([title isEqualToString:@"凤凰山南堤航线"]) {
         url= [NSURL URLWithString:KRouteTideP4];
     }
-    //    NSLog(@"您选择的区域是%@",url);
+
+    return url;
+}
+-(NSString *)judgeRoutesWithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"霓屿山北堤航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP1];
+    }
+    if ([title isEqualToString:@"霓屿山东堤北段航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP2];
+    }
+    if ([title isEqualToString:@"凤凰山东堤南段航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP3];
+    }
+    if ([title isEqualToString:@"凤凰山南堤航线"]) {
+        url= [NSString stringWithFormat:KRouteTideP4];
+    }
     return url;
 }
 

@@ -16,7 +16,7 @@
 #import "NormalViewController.h"
 #import "dataAnaly.h"
 #import "DiyTheme.h"
-
+#import "MyRequest.h"
 @interface shortTideViewController ()<UITableViewDelegate,UITableViewDataSource,UIScrollViewDelegate,CPTScatterPlotDelegate,CPTPlotSpaceDelegate>
 {
     
@@ -48,7 +48,7 @@
     NSUInteger *_indexOfSymbol;
     
     UILabel *detail;
-    
+       NSMutableArray *_array;
     UILabel *releaseTime;
 }
 
@@ -74,6 +74,7 @@
     _stideDirForTu = [[NSMutableArray alloc] init];
     _datAnaly = [[dataAnaly alloc] init];
     datasForPlot = [[NSMutableArray alloc] init];
+    _array = [[NSMutableArray alloc] init];
     
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
@@ -91,9 +92,6 @@
     
     _title = @"A点";
     self.tabBarController.tabBar.hidden = NO;
-//    [self setMapView:_title];
-//    //设置滚动页面
-//    [self createScrollView];
     
     //显示详细；
     detail = [[UILabel alloc]initWithFrame:CGRectMake(40, KHight*0.4, KWight-40, 100)];
@@ -108,9 +106,8 @@
     [self setButton];
     [self setNavTitle:_title];
     [self initTableAndPicture];
-    NSArray *dateArray1 = [self getDataFromNet:_title];
-//    NSLog(@"%@",dateArray1);
-    [self setXY:dateArray1];
+    [self getDataFromNet:_title];
+//    [self setXY:dateArray1];
     
     [self setTextNoRefesh];
 
@@ -125,27 +122,6 @@
 -(void)setNavTitle:(NSString *)title
 {
 
-    
-//    UIView *middle = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
-//    UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
-//    select.frame = CGRectMake(15, 0, 40, 40);
-//    [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];
-//    [select addTarget:self action:@selector(selectPoint) forControlEvents:UIControlEventTouchUpInside];
-//    
-//    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-//    label.backgroundColor = [UIColor clearColor];
-//    label.frame = CGRectMake(0, 10, 40, 40);
-//    label.font = [UIFont boldSystemFontOfSize:16.0];
-//    label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor]; // change this color
-//    _titleLabel = label;
-//    _titleLabel.text = _title;
-//    [_titleLabel sizeToFit];
-//    [middle addSubview:select];
-//    [middle addSubview:label];
-//    
-//    [label sizeToFit];
-//    self.navigationItem.titleView = middle;
     
     UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
     select.frame = CGRectMake(0, 0, 60, 40);
@@ -174,10 +150,8 @@
     
     UIButton *exampleButton1 = [UIButton buttonWithType:UIButtonTypeCustom];
     exampleButton1.frame = CGRectMake(0, 2, 30, 40);
-//    [exampleButton1 addTarget:self action:@selector(backHome) forControlEvents:UIControlEventTouchUpInside];
     [exampleButton1 setImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
-//    UIBarButtonItem *right = [[UIBarButtonItem alloc] initWithCustomView:exampleButton1];
-//    self.navigationItem.rightBarButtonItem = right;
+
     
 }
 
@@ -216,17 +190,12 @@
             zoneA.image = [UIImage imageNamed:@"pointD"];
         }
         [self viewDidAppear:YES];
-        NSLog(@"%@",_point);
         [self setNavTitle:_title];
-//        [self setMapView:_title];
         [self judgePoint:_point];
         [self.shortTideTable reloadData];
         [self getDataFromNet:_title];
-        //NSArray *dateArray1 = [self getDataFromNet:_title];
-        //[self setXY:dateArray1];
         detail.text = @" ";
         _indexOfSymbol = 200;
-        [graph reloadData];
     } animated:YES];
 }
 
@@ -367,6 +336,24 @@
     }
     if ([point isEqualToString:@"D点"]) {
         url= [NSURL URLWithString:@KPointSTideD];
+    }
+    return url;
+}
+
+-(NSString *)judgePointWithStr:(NSString *)point
+{
+    NSString *url;
+    if ([point isEqualToString:@"A点"]) {
+        url= [NSString stringWithFormat:@KPointSTideA];
+    }
+    if ([point isEqualToString:@"B点"]) {
+        url= [NSString stringWithFormat:@KPointSTideB];
+    }
+    if ([point isEqualToString:@"C点"]) {
+        url= [NSString stringWithFormat:@KPointSTideC];
+    }
+    if ([point isEqualToString:@"D点"]) {
+        url= [NSString stringWithFormat:@KPointSTideD];
     }
     return url;
 }
@@ -556,73 +543,56 @@
 
 
 //获取网络数据
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
     
-    NSLog(@"标题是===%@",title);
-    NSURL *url = [self judgePoint:title];
-    NSLog(@"url是===%@",url);
-    //第一步，创建URL
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
-    NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-    //NSString *pubtime2=[pubtime substringToIndex:16];
-    //releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-    
+    NSString *url = [self judgePointWithStr:title];
     [_datetimeArray removeAllObjects];
     [_valueArray removeAllObjects];
     [_dataJQ removeAllObjects];
     
-    
-//    NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-//    NSString *pubtime2=[pubtime substringToIndex:16];
-    //releaseTime.text=@"123";
-    //[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-    NSString *pubtime1 = [pubtime substringToIndex:10];
-    _publishTime = pubtime1;
-    for (int i = 0; i<array.count; i++) {
-        NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-        NSString *publishtime1 = [publishtime substringToIndex:10];
-        if ([publishtime1 isEqualToString:pubtime1]) {
-           
-            NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-            NSString *jiequ = [dateString1 substringToIndex:10];
-            if ([jiequ isEqualToString:publishtime1]) {
-                [_similarLength addObject:jiequ];
-            }
-            NSString *dateString = [_datAnaly stringForAnaly:dateString1];
-            NSNumber *windspeed = [array[i] objectForKey:@"power"];
-            
-            
-            [_datetimeArray addObject:dateString];
-            [_valueArray addObject:windspeed];
-            [_dataJQ addObject:jiequ];
-            [datasForPlot addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:dateString,@"date",windspeed,@"speed", nil]];
-            
-            
-        }
-    }
-
-    
-    for (int i=0; i<_valueArray.count; i++) {
-        NSLog(@"你好-----%@",_valueArray[i]);
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
-        NSString  *value = _valueArray[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
-        NSLog(@"%@===%f",_datetimeArray[i],y1[i]);
-    }
-    return _datetimeArray;
+        NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime1 = [pubtime substringToIndex:10];
+        _publishTime = pubtime1;
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                NSString *jiequ = [dateString1 substringToIndex:10];
+                if ([jiequ isEqualToString:publishtime1]) {
+                    [_similarLength addObject:jiequ];
+                }
+                NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+                NSNumber *windspeed = [_array[i] objectForKey:@"power"];
+                
+                [_datetimeArray addObject:dateString];
+                [_valueArray addObject:windspeed];
+                [_dataJQ addObject:jiequ];
+                [datasForPlot addObject:[NSMutableDictionary dictionaryWithObjectsAndKeys:dateString,@"date",windspeed,@"speed", nil]];
+                
+                
+            }
+        }
+        
+        
+        for (int i=0; i<_valueArray.count; i++) {
+            
+            NSString  *value = _valueArray[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+        }
+        [self setXY:_datetimeArray];
+        [graph reloadData];
+        
+    } failure:^(NSError *error) {
+        
+    }];
     
 }
 

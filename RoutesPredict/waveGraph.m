@@ -11,7 +11,7 @@
 #import "fllViewController.h"
 #import "DiyTheme.h"
 #import "dataAnaly.h"
-
+#import "MyRequest.h"
 
 
 @implementation waveGraph
@@ -29,7 +29,7 @@
     NSMutableArray *_dataJQ;
     NSMutableArray *_similarLength;
     NSString *_publishTime;
-    
+    NSMutableArray *_array;
     UILabel *detail;
 }
 
@@ -45,6 +45,7 @@
         _dataJQ = [[NSMutableArray alloc]init];
         _similarLength = [[NSMutableArray alloc]init];
         _dataAnaly = [[dataAnaly alloc]init];
+        _array = [[NSMutableArray alloc] init];
         _indexOfSymbol = 200;
         NSLog(@"%@",_title);
         
@@ -81,10 +82,10 @@
     [self addSubview:detail];
     
     
-    NSArray *dateArray = [self getDataFromNet:_title];
+    [self getDataFromNet:_title];
     [self initGraph];
-    NSLog(@"%lu",(unsigned long)dateArray.count);
-    [self setXY:dateArray];
+
+//    [self setXY:dateArray];
     
 }
 
@@ -134,76 +135,129 @@
     //    [self setXY:dateArray1];
 }
 
--(NSArray *)getDataFromNet:(NSString *)title
+-(void)getDataFromNet:(NSString *)title
 {
-    NSLog(@"zey%@",title);
-    NSURL *url;
+
+    NSString *url;
     //第一步，创建URL
-    url = [self judgeRoutes:title];
-    NSLog(@"url是===%@",url);
-    
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+    url = [self judgeRoutesWithStr:title];
     [_waveDir removeAllObjects];
     [_waveTimeArr removeAllObjects];
     [_waveValueArr removeAllObjects];
     [_dataJQ removeAllObjects];
-    if (array.count == 0) {
-        NSString *datestring = @"0";
-        NSNumber *windspeed = @(0);
-        NSString *windDir = @"0";
-        [_waveTimeArr addObject:datestring];
-        [_waveValueArr addObject:windspeed];
-        [_waveDir addObject:windDir];
-    }else {
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        _publishTime = pubtime1;
-    
-    for (NSDictionary *dic in array) {
-        
-        
-        NSString *dateString1 = [dic objectForKey:@"datatime"];
-        NSString *jiequ = [dateString1 substringToIndex:10];
-        if ([jiequ isEqualToString:_publishTime]) {
-            [_similarLength addObject:jiequ];
+    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
+        if (_array.count == 0) {
+            NSString *datestring = @"0";
+            NSNumber *windspeed = @(0);
+            NSString *windDir = @"0";
+            [_waveTimeArr addObject:datestring];
+            [_waveValueArr addObject:windspeed];
+            [_waveDir addObject:windDir];
+        }else {
+            NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+            NSString *pubtime1 = [pubtime substringToIndex:10];
+            _publishTime = pubtime1;
+            
+            for (NSDictionary *dic in _array) {
+                
+                
+                NSString *dateString1 = [dic objectForKey:@"datatime"];
+                NSString *jiequ = [dateString1 substringToIndex:10];
+                if ([jiequ isEqualToString:_publishTime]) {
+                    [_similarLength addObject:jiequ];
+                }
+                NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
+                NSNumber *wavespeed = [dic objectForKey:@"power"];
+                NSNumber *wavedir = [dic objectForKey:@"dir"];
+                NSString *waveDirection = [_dataAnaly judgeDirectionPower:wavedir];
+                
+                [_waveTimeArr addObject:dateString];
+                [_waveValueArr addObject:wavespeed];
+                [_waveDir addObject:waveDirection];
+                [_dataJQ addObject:jiequ];
+            }
         }
-        NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
-        NSNumber *wavespeed = [dic objectForKey:@"power"];
-        NSNumber *wavedir = [dic objectForKey:@"dir"];
-        NSString *waveDirection = [_dataAnaly judgeDirectionPower:wavedir];
-        
-        [_waveTimeArr addObject:dateString];
-        [_waveValueArr addObject:wavespeed];
-        [_waveDir addObject:waveDirection];
-        [_dataJQ addObject:jiequ];
-    }
-    }
-    
-    
-    for (int i=0; i<num; i++) {
         
         
+        for (int i=0; i<num; i++) {
+            
+            
+            
+            NSString  *value = _waveValueArr[i];
+            double yy = value.doubleValue;
+            y1[i] = yy;
+            xl[i] = i;
+            
+        }
+        detail.text = @" ";
+        _indexOfSymbol = 200;
+        [graph reloadData];
+        [self setXY:_waveTimeArr];
         
-        NSString  *value = _waveValueArr[i];
-        double yy = value.doubleValue;
-        y1[i] = yy;
-        xl[i] = i;
+    } failure:^(NSError *error) {
         
-    }
-    detail.text = @" ";
-    _indexOfSymbol = 200;
-    [graph reloadData];
-    return _waveTimeArr;
+    }];
+//    
+//    //第二步，通过URL创建网络请求
+//    
+//    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
+//    
+//    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
+//    //第三步，连接服务器
+//    
+//    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+//    
+//    
+//    NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
+// 
+//    if (array.count == 0) {
+//        NSString *datestring = @"0";
+//        NSNumber *windspeed = @(0);
+//        NSString *windDir = @"0";
+//        [_waveTimeArr addObject:datestring];
+//        [_waveValueArr addObject:windspeed];
+//        [_waveDir addObject:windDir];
+//    }else {
+//        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
+//        NSString *pubtime1 = [pubtime substringToIndex:10];
+//        _publishTime = pubtime1;
+//    
+//    for (NSDictionary *dic in array) {
+//        
+//        
+//        NSString *dateString1 = [dic objectForKey:@"datatime"];
+//        NSString *jiequ = [dateString1 substringToIndex:10];
+//        if ([jiequ isEqualToString:_publishTime]) {
+//            [_similarLength addObject:jiequ];
+//        }
+//        NSString *dateString = [_dataAnaly stringForAnaly:dateString1];
+//        NSNumber *wavespeed = [dic objectForKey:@"power"];
+//        NSNumber *wavedir = [dic objectForKey:@"dir"];
+//        NSString *waveDirection = [_dataAnaly judgeDirectionPower:wavedir];
+//        
+//        [_waveTimeArr addObject:dateString];
+//        [_waveValueArr addObject:wavespeed];
+//        [_waveDir addObject:waveDirection];
+//        [_dataJQ addObject:jiequ];
+//    }
+//    }
+//    
+//    
+//    for (int i=0; i<num; i++) {
+//        
+//        
+//        
+//        NSString  *value = _waveValueArr[i];
+//        double yy = value.doubleValue;
+//        y1[i] = yy;
+//        xl[i] = i;
+//        
+//    }
+//    detail.text = @" ";
+//    _indexOfSymbol = 200;
+//    [graph reloadData];
+//    return _waveTimeArr;
 }
 
 
@@ -223,6 +277,24 @@
         url= [NSURL URLWithString:KRouteWaveP4];
     }
 //    NSLog(@"您选择的区域是%@",url);
+    return url;
+}
+-(NSString *)judgeRoutesWithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"霓屿山北堤航线"]) {
+        url= [NSString stringWithFormat:KRouteWaveP1];
+    }
+    if ([title isEqualToString:@"霓屿山东堤北段航线"]) {
+        url= [NSString stringWithFormat:KRouteWaveP2];
+    }
+    if ([title isEqualToString:@"凤凰山东堤南段航线"]) {
+        url= [NSString stringWithFormat:KRouteWaveP3];
+    }
+    if ([title isEqualToString:@"凤凰山南堤航线"]) {
+        url= [NSString stringWithFormat:KRouteWaveP4];
+    }
+    //    NSLog(@"您选择的区域是%@",url);
     return url;
 }
 
