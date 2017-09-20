@@ -554,7 +554,7 @@
     NSURL *url_24 = [NSURL URLWithString:Knormal24];
     NSURLRequest *requst_24 = [NSURLRequest requestWithURL:url_24 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
     
-    [MyRequest GET:Knormal24 CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:Knormal24 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         weather24 = [rootDic[0] objectForKey:@"weather"];
         visible24 = [rootDic[0] objectForKey:@"vis"];
@@ -578,33 +578,11 @@
         
         
     }];
-//    [NSURLConnection sendAsynchronousRequest:requst_24 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-//        // 解析
-//        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-//       weather24 = [rootDic[0] objectForKey:@"weather"];
-//       visible24 = [rootDic[0] objectForKey:@"vis"];
-//        
-//        _24weather.text = weather24;
-//        _24visible.text = visible24;
-//        
-//        
-//        if (weather24.length>3) {
-//            wea24 =[weather24 substringToIndex:1];
-//            NSLog(@"zeyzeyzey-----jie--%@",wea24);
-//        }
-//        
-//        
-//        
-//        
-//        [self addPicture];
-//        [self Animating];
-//       
-//
-//    }];
+ 
     NSURL *url_48 = [NSURL URLWithString:Knormal48];
     NSURLRequest *requst_48 = [NSURLRequest requestWithURL:url_48 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
     
-    [MyRequest GET:Knormal48 CacheTime:30 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:Knormal48 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         weather48 = [rootDic[0] objectForKey:@"weather"];
         visible48 = [rootDic[0] objectForKey:@"vis"];
@@ -666,66 +644,10 @@
         
         
     }];
-//    [NSURLConnection sendAsynchronousRequest:requst_48 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-//        // 解析
-//        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-//        weather48 = [rootDic[0] objectForKey:@"weather"];
-//        visible48 = [rootDic[0] objectForKey:@"vis"];
-//        
-//        _48weather.text = weather48;
-//        _48visible.text = visible48;
-//        
-//        if (weather48.length>3) {
-//            wea48 =[weather48 substringToIndex:1];
-////            NSLog(@"zeyzeyzey-----jie--%@",wea24);
-//        }
-//        
-//        UIImageView *weather2 = [[UIImageView alloc]initWithFrame:CGRectMake(KWight*0.4, KHight*0.23, KWight*0.28, KWight*0.28)];
-//        if ([weather48 isEqualToString:@"晴 "]) {
-//            [weather2 setImage:[UIImage imageNamed:@"sun.png"]];
-//        }else if ([weather48 isEqualToString:@"多云 "]){
-//            [weather2 setImage:[UIImage imageNamed:@"cloudy.png"]];
-//        }else if ([weather48 isEqualToString:@"阴有雨 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"rainy.png"]];
-//        }else if ([weather48 isEqualToString:@"阴转多云 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"yin-cloud.png"]];
-//        }else if ([weather48 isEqualToString:@"阴 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"yin.png"]];
-//        }else if ([weather48 isEqualToString:@"多云转阴有雨 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"cloudy-rain.png"]];
-//        }else if ([weather48 isEqualToString:@"阴有阵雨转多云 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }else if ([weather48 isEqualToString:@"阴有阵雨 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }else if ([weather48 isEqualToString:@"多云到阴局部有雨 "]){
-//            [weather2 setImage:[UIImage imageNamed:@"cloudy.png"]];
-//        }else if ([weather48 isEqualToString:@"阴有雨转多云 "])
-//        {
-//            [weather2 setImage:[UIImage imageNamed:@"rainy.png"]];
-//        }else if ([wea48 isEqualToString:@"阴"]){
-//            [weather2 setImage:[UIImage imageNamed:@"yin.png"]];
-//        }else if([wea48 isEqualToString:@"多"]){
-//            [weather2 setImage:[UIImage imageNamed:@"yin-cloud.png"]];
-//        }else if([wea48 isEqualToString:@"雷"]){
-//            [weather2 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }
-//        else{
-//            [weather2 setImage:[UIImage imageNamed:@"sun.png"]];
-//        }
-//        [self.view addSubview:weather2];
-//
-//        [self Animating];
-////        [self addPicture];
-//    }];
+ 
     NSURL *url_72 = [NSURL URLWithString:Knormal72];
     NSURLRequest *requst_72 = [NSURLRequest requestWithURL:url_72 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    [MyRequest GET:Knormal72 CacheTime:30 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:Knormal72 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         weather72 = [rootDic[0] objectForKey:@"weather"];
         visible72 = [rootDic[0] objectForKey:@"vis"];
@@ -787,66 +709,7 @@
         
     }];
     
-//    [NSURLConnection sendAsynchronousRequest:requst_72 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-//        // 解析
-//        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-//        weather72 = [rootDic[0] objectForKey:@"weather"];
-//        visible72 = [rootDic[0] objectForKey:@"vis"];
-//        
-//        _72weather.text = weather72;
-//        _72visible.text = visible72;
-// 
-//        
-//        [self Animating];
-//        
-//        if (weather72.length>3) {
-//            wea72 =[weather72 substringToIndex:1];
-// 
-//        }
-//        
-//        
-//        UIImageView *weather3 = [[UIImageView alloc]initWithFrame:CGRectMake(KWight*0.7, KHight*0.23, KWight*0.28, KWight*0.28)];
-//        if ([weather72 isEqualToString:@"晴 "]) {
-//            [weather3 setImage:[UIImage imageNamed:@"sun.png"]];
-//        }else if ([weather72 isEqualToString:@"多云 "]){
-//            [weather3 setImage:[UIImage imageNamed:@"cloudy.png"]];
-//        }else if ([weather72 isEqualToString:@"阴有雨 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"rainy.png"]];
-//        }else if ([weather72 isEqualToString:@"阴转多云 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"yin-cloud.png"]];
-//        }else if ([weather72 isEqualToString:@"阴 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"yin.png"]];
-//        }else if ([weather72 isEqualToString:@"多云转阴有雨 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"cloudy-rain.png"]];
-//        }else if ([weather72 isEqualToString:@"阴有阵雨转多云 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }else if ([weather72 isEqualToString:@"阴有阵雨 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }else if ([weather72 isEqualToString:@"多云到阴局部有雨 "]){
-//            [weather3 setImage:[UIImage imageNamed:@"cloudy.png"]];
-//        }else if ([weather72 isEqualToString:@"阴有雨转多云 "])
-//        {
-//            [weather3 setImage:[UIImage imageNamed:@"rainy.png"]];
-//        }else if ([wea72 isEqualToString:@"阴"]){
-//            [weather3 setImage:[UIImage imageNamed:@"yin.png"]];
-//        }else if([wea72 isEqualToString:@"多"]){
-//            [weather3 setImage:[UIImage imageNamed:@"yin-cloud.png"]];
-//        }else if([wea72 isEqualToString:@"雷"]){
-//            [weather3 setImage:[UIImage imageNamed:@"zhen-rain.png"]];
-//        }
-//        else{
-//            [weather3 setImage:[UIImage imageNamed:@"sun.png"]];
-//        }
-//        [self.view addSubview:weather3];
-//        
-//    }];
-    
+ 
     
 }
 
