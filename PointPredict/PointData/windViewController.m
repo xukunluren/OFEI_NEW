@@ -101,6 +101,8 @@
     UILabel *detail;
     
     UILabel *releaseTime;
+    
+    
 }
 
 
@@ -135,6 +137,10 @@
     datasForPlot = [[NSMutableArray alloc] init];
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
+    _dateArray = [[NSMutableArray alloc] init];
+    _windSpeedArray = [[NSMutableArray alloc] init];
+    _windPowerArray = [[NSMutableArray alloc] init];
+    _windDirectionArray = [[NSMutableArray alloc] init];
     
     _indexOfSymbol = 200;
     
@@ -703,82 +709,11 @@
 }
 
 - (void)configureCell:(fourTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-        NSLog(@"标题是===%@",_title);
-        NSURL *url = [self judgePoint:_title];
-    NSURLRequest *requst = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:100];
-    //异步链接(形式1,较少用)
-    [NSURLConnection sendAsynchronousRequest:requst queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
-        NSMutableArray *dateArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windSpeedArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windPowerArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windDirectionArray = [[NSMutableArray alloc] init];
-//        for (NSDictionary *dic in array) {
-//            
-//            
-//            NSString *dateString1 = [dic objectForKey:@"dataTime"];
-//           
-//            NSNumber *windspeed1 = [dic objectForKey:@"POWER"];
-//            
-//            NSString *windspeed = windspeed1.description;
-//            NSNumber *winddir = [dic objectForKey:@"DIR"];
-//
-//           
-//          
-//            NSString *windPower = [_datAnaly judgeWindPower:windspeed1];
-//             NSString *windDirecion =[_datAnaly judgeDirectionPower:winddir];
-//            NSString *dateString = [_datAnaly  stringForAnaly:dateString1];
-//            
-//            
-//            [dateArray addObject:dateString];
-//            [windSpeedArray addObject:windspeed];
-//            [windDirection addObject:windDirecion];
-//            [windPowerArray addObject:windPower];
-//        }
-       NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-       NSString *pubtime2=[pubtime  substringToIndex:16];
-        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        for (int i = 0; i<array.count; i++) {
-            NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-            NSString *publishtime1 = [publishtime substringToIndex:10];
-            
-            if ([publishtime1 isEqualToString:pubtime1]) {
-                
-                NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-                
-                NSNumber *windspeed1 = [array[i] objectForKey:@"power"];
-                
-                NSString *windspeed = windspeed1.description;
-                NSNumber *winddir = [array[i] objectForKey:@"dir"];
-                
-                NSString *windPower = [_datAnaly judgeWindPower:windspeed1];
-                NSString *windDirecion =[_datAnaly judgeDirectionPower:winddir];
-                NSString *dateString = [_datAnaly  stringForAnaly:dateString1];
-                
-//                windspeed = [windspeed substringToIndex:3];
-                
-                CGFloat windspeed2 = [windspeed1 doubleValue];
-                NSString *windspeed3 = [NSString stringWithFormat:@"%.1f",windspeed2];
-
-                
-                [dateArray addObject:dateString];
-                [windSpeedArray addObject:windspeed3];
-                [windDirectionArray addObject:windDirecion];
-                [windPowerArray addObject:windPower];
-                
-            }
-        
-        }
-        
-        cell.data1.text = dateArray[indexPath.row];
-        cell.data2.text = windSpeedArray[indexPath.row];
-        cell.data3.text = windPowerArray[indexPath.row];
-        cell.data4.text = windDirectionArray[indexPath.row];
-        NSLog(@"数据大小是多少：%lu",(unsigned long)dateArray.count);
-    }];
+    
+        cell.data1.text = _dateArray[indexPath.row];
+        cell.data2.text = _windSpeedArray[indexPath.row];
+        cell.data3.text = _windPowerArray[indexPath.row];
+        cell.data4.text = _windDirectionArray[indexPath.row];
     
 }
 
@@ -794,10 +729,48 @@
     [datasForPlot removeAllObjects];
     [_dataJQ removeAllObjects];
     NSString *url = [self judgePointWithStr:_title];
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
+        
+        
+        
+        
+        
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime2=[pubtime  substringToIndex:16];
+        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
         NSString *pubtime1 = [pubtime substringToIndex:10];
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                
+                NSNumber *windspeed1 = [_array[i] objectForKey:@"power"];
+                
+                NSString *windspeed = windspeed1.description;
+                NSNumber *winddir = [_array[i] objectForKey:@"dir"];
+                
+                NSString *windPower = [_datAnaly judgeWindPower:windspeed1];
+                NSString *windDirecion =[_datAnaly judgeDirectionPower:winddir];
+                NSString *dateString = [_datAnaly  stringForAnaly:dateString1];
+                
+                CGFloat windspeed2 = [windspeed1 doubleValue];
+                NSString *windspeed3 = [NSString stringWithFormat:@"%.1f",windspeed2];
+                
+                
+                [_dateArray addObject:dateString];
+                [_windSpeedArray addObject:windspeed3];
+                [_windDirectionArray addObject:windDirecion];
+                [_windPowerArray addObject:windPower];
+                
+            }
+            
+        }
+        
+        
         _publishTime = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 0, 0)];
         _publishTime.text = pubtime1;
         [self.view addSubview:_publishTime];

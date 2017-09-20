@@ -54,7 +54,9 @@
     UILabel *detail;
     
     UILabel *releaseTime;
-    //NSString *pubtime2;
+    NSMutableArray *dateArray ;
+    NSMutableArray *windHighArray ;
+    NSMutableArray *windDirection ;
 }
 
 
@@ -85,7 +87,9 @@
     
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
-    
+    dateArray = [[NSMutableArray alloc] init];
+    windHighArray = [[NSMutableArray alloc] init];
+    windDirection = [[NSMutableArray alloc] init];
     _indexOfSymbol = 200;
     
     
@@ -298,57 +302,14 @@
 }
 
 - (void)configureCell:(threeTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"标题是===%@",_title);
-    NSURL *url = [self judgePoint:_title];
-    NSURLRequest *requst = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    //异步链接(形式1,较少用)
-    [NSURLConnection sendAsynchronousRequest:requst queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
-        NSMutableArray *dateArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windHighArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windDirection = [[NSMutableArray alloc] init];
-
-        
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime2=[pubtime substringToIndex:16];
-        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        for (int i = 0; i<array.count; i++) {
-            NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-            NSString *publishtime1 = [publishtime substringToIndex:10];
-            if ([publishtime1 isEqualToString:pubtime1]) {
-                
-                
-                NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-                NSString *dateString = [self stringForAnaly:dateString1];
-                NSNumber *windhigh1 = [array[i] objectForKey:@"power"];
-                CGFloat windhigh2 = [windhigh1 doubleValue];
-                //            NSInteger windssss1 = [windhigh1 doubleValue];
-                NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
-                //            NSLog(@"进度进度精度%@ == %ld===%@",windspeed1,(long)windssss,windspeed);
-                NSNumber *winddir = [array[i] objectForKey:@"dir"];
-                //            NSInteger windddd = [winddir doubleValue];
-                NSString *windDirecion = winddir.description;
-                
-                NSLog(@"ceshiceshi:%@, %@, %@",dateString,windhigh,windDirecion);
-                
-                [dateArray addObject:dateString];
-                [windHighArray addObject:windhigh];
-                [windDirection addObject:windDirecion];
-                
-            }
-        }
+    
         
         cell.data1.text = dateArray[indexPath.row];
         cell.data2.text = windHighArray[indexPath.row];
         cell.data3.text = windDirection[indexPath.row];
         
     
-        NSLog(@"数据大小是多少：%lu",(unsigned long)dateArray.count);
-        
-    }];
+    
 }
 
 
@@ -603,13 +564,39 @@
     [datasForPlot removeAllObjects];
     [_dataJQ removeAllObjects];
     
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
         
-        NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
         
+        NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime2=[pubtime substringToIndex:16];
+        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
         NSString *pubtime1 = [pubtime substringToIndex:10];
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                
+                
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                NSString *dateString = [self stringForAnaly:dateString1];
+                NSNumber *windhigh1 = [_array[i] objectForKey:@"power"];
+                CGFloat windhigh2 = [windhigh1 doubleValue];
+                NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
+                NSNumber *winddir = [_array[i] objectForKey:@"dir"];
+                NSString *windDirecion = winddir.description;
+                
+                [dateArray addObject:dateString];
+                [windHighArray addObject:windhigh];
+                [windDirection addObject:windDirecion];
+                
+            }
+        }
+
+        
+        
+       
         _publishTime = pubtime1;
         for (int i = 0; i<_array.count; i++) {
             NSString *publishtime = [_array[i] objectForKey:@"publishtime"];

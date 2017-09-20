@@ -56,6 +56,10 @@
     UILabel *detail;
      NSMutableArray *_array;
     UILabel *releaseTime;
+    
+    NSMutableArray *dateArray ;
+    NSMutableArray *windHighArray;
+    NSMutableArray *windDirection ;
 }
 
 #pragma mark - 视图将要出现
@@ -81,6 +85,9 @@
     _array = [[NSMutableArray alloc] init];
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
+    dateArray = [[NSMutableArray alloc] init];
+    windHighArray = [[NSMutableArray alloc] init];
+    windDirection = [[NSMutableArray alloc] init];
 
     _indexOfSymbol = 200;
     
@@ -131,26 +138,7 @@
 //}
 -(void)setNavTitle:(NSString *)title
 {
-//    UIView *middle = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
-//    UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
-//    select.frame = CGRectMake(15, 0, 40, 40);
-//    [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];
-//    [select addTarget:self action:@selector(selectPoint) forControlEvents:UIControlEventTouchUpInside];
-//    
-//    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-//    label.backgroundColor = [UIColor clearColor];
-//    label.frame = CGRectMake(0, 10, 40, 40);
-//    label.font = [UIFont boldSystemFontOfSize:16.0];
-//    label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor]; // change this color
-//    _titleLabel = label;
-//    _titleLabel.text = _title;
-//    [_titleLabel sizeToFit];
-//    [middle addSubview:select];
-//    [middle addSubview:label];
-//    
-//    [label sizeToFit];
-//    self.navigationItem.titleView = middle;
+ 
     UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
     select.frame = CGRectMake(0, 0, 60, 40);
     _titleLabel.text = _title;
@@ -177,7 +165,6 @@
     
     UIButton *exampleButton1 = [UIButton buttonWithType:UIButtonTypeCustom];
     exampleButton1.frame = CGRectMake(0, 2, 30, 40);
-//    [exampleButton1 addTarget:self action:@selector(backHome) forControlEvents:UIControlEventTouchUpInside];
     [exampleButton1 setImage:[UIImage imageNamed:@"home.png"] forState:UIControlStateNormal];
 
     
@@ -370,11 +357,46 @@
     [_waveDirForTu removeAllObjects];
     [_dataJQ removeAllObjects];
     [datasForPlot removeAllObjects];
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
+        
+        
+        
+        
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime2=[pubtime substringToIndex:16];
+        releaseTime.text= [NSString stringWithFormat:@"发布时间:%@",pubtime2];
         NSString *pubtime1 = [pubtime substringToIndex:10];
+        
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                
+                NSNumber *windhigh1 = [_array[i] objectForKey:@"power"];
+                CGFloat windhigh2 = [windhigh1 doubleValue];
+                
+                NSNumber *winddir = [_array[i] objectForKey:@"dir"];
+                
+                NSString *windDirecion = [_datAnaly judgeDirectionPower:winddir];
+                NSString *dateString = [_datAnaly stringForAnaly:dateString1];
+                
+                
+                NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
+                
+                
+                [dateArray addObject:dateString];
+                [windHighArray addObject:windhigh];
+                [windDirection addObject:windDirecion];
+                
+            }
+            
+            
+            
+        }
+
         _publishTime = pubtime1;
         for (int i = 0; i<_array.count; i++) {
             NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
@@ -711,55 +733,11 @@
 
 #pragma 对表中每一行需要填充的内容进行设置------xk
 - (void)configureCell:(threeTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"标题是===%@",_title);
-    NSURL *url = [self judgePoint:_title];
-    NSURLRequest *requst = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:100];
-    //异步链接(形式1,较少用)
-    [NSURLConnection sendAsynchronousRequest:requst queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
-        NSMutableArray *dateArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windHighArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windDirection = [[NSMutableArray alloc] init];
-        
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime2=[pubtime substringToIndex:16];
-        releaseTime.text= [NSString stringWithFormat:@"发布时间:%@",pubtime2];
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        
-        for (int i = 0; i<array.count; i++) {
-            NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-            NSString *publishtime1 = [publishtime substringToIndex:10];
-            if ([publishtime1 isEqualToString:pubtime1]) {
-                NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-                
-                NSNumber *windhigh1 = [array[i] objectForKey:@"power"];
-                CGFloat windhigh2 = [windhigh1 doubleValue];
-                
-                NSNumber *winddir = [array[i] objectForKey:@"dir"];
-                
-                NSString *windDirecion = [_datAnaly judgeDirectionPower:winddir];
-                NSString *dateString = [_datAnaly stringForAnaly:dateString1];
-                
-                
-                NSString *windhigh = [NSString stringWithFormat:@"%.1f",windhigh2];
-                
-                
-                [dateArray addObject:dateString];
-                [windHighArray addObject:windhigh];
-                [windDirection addObject:windDirecion];
-                
-            }
-            
-            
-            
-        }
-        
+    
         cell.data1.text = dateArray[indexPath.row];
         cell.data2.text = windHighArray[indexPath.row];
         cell.data3.text = windDirection[indexPath.row];
-    }];
+  
 }
 
 #pragma 判断点位

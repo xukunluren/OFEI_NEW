@@ -33,6 +33,7 @@
 @property(nonatomic,strong)NSMutableArray *dateArray;
 @property(nonatomic,strong)NSMutableArray *windSpeedArray ;
 @property(nonatomic,strong)NSMutableArray *windPowerArray;
+@property(nonatomic,strong)NSMutableArray *windDirectionArray;
 @property(nonatomic,strong)NSMutableArray *windDirection;
 
 @property (weak,nonatomic)UIPageControl *pageControl;

@@ -41,17 +41,7 @@
 //设置顶部右侧按钮
 -(void)setButton
 {
-//    self.navigationController.navigationBar.barTintColor = BarColor;
-    //词方法可以用来放置标题的下拉按钮
-    //    UIView *buttonView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 100, 44)];
-    
-//    UIButton *exampleButton1 = [UIButton buttonWithType:UIButtonTypeCustom];
-//    exampleButton1.frame = CGRectMake(0, 2, 30, 40);
-//    [exampleButton1 addTarget:self action:@selector(selectArea) forControlEvents:UIControlEventTouchUpInside];
-//    [exampleButton1 setImage:[UIImage imageNamed:@"Down-32.png"] forState:UIControlStateNormal];
-//    UIBarButtonItem *right = [[UIBarButtonItem alloc] initWithCustomView:exampleButton1];
-//    self.navigationItem.rightBarButtonItem = right;
-    
+     
     UIButton *exampleButton = [UIButton buttonWithType:UIButtonTypeCustom];
     exampleButton.frame = CGRectMake(0, 2, 30, 40);
     [exampleButton addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];

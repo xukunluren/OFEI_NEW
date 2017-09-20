@@ -50,7 +50,11 @@
     UILabel *detail;
        NSMutableArray *_array;
     UILabel *releaseTime;
+    
+    NSMutableArray *dateArray ;
+    NSMutableArray *windHighArray ;
 }
+
 
 
 #pragma mark - 视图将要出现
@@ -78,7 +82,8 @@
     
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
-    
+    dateArray = [[NSMutableArray alloc] init];
+    windHighArray = [[NSMutableArray alloc] init];
     _indexOfSymbol = 200;
 
     
@@ -266,53 +271,10 @@
     return cell;
 }
 - (void)configureCell:(twoTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"标题是===%@",_title);
-    NSURL *url = [self judgePoint:_title];
-    NSURLRequest *requst = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    //异步链接(形式1,较少用)
-    [NSURLConnection sendAsynchronousRequest:requst queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
-        NSMutableArray *dateArray = [[NSMutableArray alloc] init];
-        NSMutableArray *windHighArray = [[NSMutableArray alloc] init];
-
-        
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime2=[pubtime substringToIndex:16];
-        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-        
-        NSString *pubtime1 = [pubtime substringToIndex:10];
-        for (int i = 0; i<array.count; i++) {
-            NSString *publishtime = [array[i] objectForKey:@"publishtime"];
-            NSString *publishtime1 = [publishtime substringToIndex:10];
-            if ([publishtime1 isEqualToString:pubtime1]) {
-                
-                dataAnaly *data = [[dataAnaly alloc] init];
-                NSString *dateString1 = [array[i] objectForKey:@"datatime"];
-                NSString *dateString = [data stringForAnaly:dateString1];
-                NSNumber *windhigh1 = [array[i] objectForKey:@"power"];
-                CGFloat windhigh2 = [windhigh1 doubleValue];
-                NSString *windhigh = [NSString stringWithFormat:@"%.2f",windhigh2];
-                
-                //将获取到的数据放入数组中，以方便每行数据的展示
-                [dateArray addObject:dateString];
-                [windHighArray addObject:windhigh];
-                
-                
-            }
-        }
-        
+    
         cell.data1.text = dateArray[indexPath.row];
         cell.data2.text = windHighArray[indexPath.row];
-        
-        
-        NSLog(@"数据大小是多少：%lu",(unsigned long)dateArray.count);
-        
-    }];
-    
-    
-    
+  
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -551,11 +513,39 @@
     [_valueArray removeAllObjects];
     [_dataJQ removeAllObjects];
     
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
+        
+        
+        
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime2=[pubtime substringToIndex:16];
+        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
+        
         NSString *pubtime1 = [pubtime substringToIndex:10];
+        for (int i = 0; i<_array.count; i++) {
+            NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
+            NSString *publishtime1 = [publishtime substringToIndex:10];
+            if ([publishtime1 isEqualToString:pubtime1]) {
+                
+                dataAnaly *data = [[dataAnaly alloc] init];
+                NSString *dateString1 = [_array[i] objectForKey:@"datatime"];
+                NSString *dateString = [data stringForAnaly:dateString1];
+                NSNumber *windhigh1 = [_array[i] objectForKey:@"power"];
+                CGFloat windhigh2 = [windhigh1 doubleValue];
+                NSString *windhigh = [NSString stringWithFormat:@"%.2f",windhigh2];
+                
+                //将获取到的数据放入数组中，以方便每行数据的展示
+                [dateArray addObject:dateString];
+                [windHighArray addObject:windhigh];
+                
+                
+            }
+        }
+
+        
+ 
         _publishTime = pubtime1;
         for (int i = 0; i<_array.count; i++) {
             NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
@@ -599,23 +589,6 @@
 //初始化不需要刷新的控件
 -(void)setTextNoRefesh
 {
-//    UILabel *unitName = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.5, 0.15*KHight, 100, 40)];
-//    unitName.text = @"国家海洋局";
-//    unitName.textAlignment = UITextAlignmentCenter;
-//    unitName.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:18];
-//    [self.view addSubview:unitName];
-//    UILabel *unitName1 = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.5, 0.2*KHight, 150, 40)];
-//    unitName1.text = @"东海预报中心";
-//    //    unitName1.textAlignment = NSTextAlignmentCenter;
-//    unitName.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:18];
-//    [self.view addSubview:unitName1];
-//    
-//    UILabel *label2 = [[UILabel alloc] initWithFrame:CGRectMake(KWight*0.5, 0.19*KHight, KWight*0.5, 0.2*KHight)];
-//    label2.text = @"数据时间:2015-11-25 09:30";
-//    label2.font = [UIFont systemFontOfSize:12.0];
-//    label2.textColor = [UIColor blackColor];
-//    [self.view addSubview:label2];
-    
     UILabel *unitName = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.15, 0.08 *KHight, KWight*0.5, 0.2*KHight)];
     unitName.numberOfLines = 0;
     unitName.text = @"国家海洋局\n东海预报中心";
@@ -767,33 +740,13 @@
 -(CPTPlotRange *)plotSpace:(CPTPlotSpace *)space
      willChangePlotRangeTo:(CPTPlotRange *)newRange
              forCoordinate:(CPTCoordinate)coordinate{
-    //限制缩放和移动的时候。不超过原始范围
-    //    if ( coordinate == CPTCoordinateX)
-    //    {
-    //        if ([ _xPlotRange containsRange:newRange])
-    //        {
-    //            //如果缩放范围在 原始范围内。则返回缩放范围
-    //            return newRange;
-    //
-    //        }else if([newRange containsRange:_xPlotRange])
-    //        {
-    //            //如果缩放范围在原始范围外，则返回原始范围
-    //            return _xPlotRange;
-    //        }
-    //        return newRange;
-    //    }else{
-    //        return _yPlotRange;
-    //    }
+    
     
     if (coordinate == CPTCoordinateY)
     {
         newRange = ((CPTXYPlotSpace*)space).yRange;
     }
-    //    if (coordinate == CPTCoordinateX) {
-    //        newRange = ((CPTXYPlotSpace*)space).xRange;
-    //    }
-    NSLog(@"Plot changes %@", newRange);
-    return newRange;
+        return newRange;
     
 }
 
@@ -859,23 +812,7 @@
 //    NSString *yString = [formatter stringFromNumber:y];
     NSString *myString = [NSString stringWithFormat:@"日期：%@\n潮高：%.2f\n",x,y1];
     detail.text = myString;
-    // Now add the annotation to the plot area
-//    CPTTextLayer *textLayer = [[CPTTextLayer alloc] initWithText:myString/*yString*/ style:hitAnnotationTextStyle];
-//    symbolTextAnnotation              = [[CPTPlotSpaceAnnotation alloc] initWithPlotSpace:graph.defaultPlotSpace anchorPlotPoint:anchorPoint];
-//    symbolTextAnnotation.contentLayer = textLayer;
-//    
-//    if (idx>50) {
-//        float viewWidth=_hostView.frame.size.width ;
-//        float coorX = idx*(viewWidth/20) - 100;
-//        symbolTextAnnotation.displacement = CGPointMake(coorX,30.0);
-//    }else{
-//        float viewWidth=_hostView.frame.size.width ;
-//        float coorX = idx*(viewWidth/20) - 0.4*viewWidth;
-//        symbolTextAnnotation.displacement = CGPointMake(coorX,30.0);
-//        
-//    }
-//    
-//    [graph.plotAreaFrame.plotArea addAnnotation:symbolTextAnnotation];
+   
     [graph reloadData];
 }
 

@@ -105,7 +105,7 @@
     NSString *url;
     //第一步，创建URL
     url = [self judgeRoutesWithStr:title];
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
         

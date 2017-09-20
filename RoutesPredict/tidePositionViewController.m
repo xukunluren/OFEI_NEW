@@ -59,6 +59,9 @@
     UILabel *detial;
     
     UILabel *releaseTime ;
+    
+    NSMutableArray *dataTime ;
+    NSMutableArray *tideHigh ;
 }
 
 
@@ -81,6 +84,8 @@
     _array = [[NSMutableArray alloc] init];
     _dataJQ = [[NSMutableArray alloc]init];
     _similarLength = [[NSMutableArray alloc]init];
+    dataTime = [[NSMutableArray alloc] init];
+    tideHigh = [[NSMutableArray alloc] init];
     _indexOfSymbol = 200;
     
     CGRect mainView = [UIScreen mainScreen].bounds;
@@ -347,15 +352,33 @@
     [timeArr removeAllObjects];
     [valueArr removeAllObjects];
     [_dataJQ removeAllObjects];
-    [MyRequest GET:url CacheTime:10 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
+        
+        
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
+        NSString *pubtime2=[pubtime substringToIndex:16];
+        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
+        
+        for (NSDictionary *dic in _array) {
+            NSString *dateString1 = [dic objectForKey:@"datatime"];
+            NSString *dateString = [self stringForAnaly:dateString1];
+            
+            NSString *tideString1 = [dic objectForKey:@"power"];
+            CGFloat tideString2 = [tideString1 doubleValue];
+            NSString *tideString = [NSString stringWithFormat:@"%.2f",tideString2];
+            
+            [dataTime addObject:dateString];
+            
+            [tideHigh addObject:tideString];
+        }
         
         
+        
+    
         NSString *pubtime1 = [pubtime substringToIndex:10];
         _publishTime = pubtime1;
-        
         
         for (int i = 0; i<_array.count; i++) {
             NSString *publishtime = [_array[i] objectForKey:@"publishtime"];
@@ -1063,40 +1086,11 @@
 }
 
 - (void)configureCell:(twoTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"标题是===%@",_title);
-    NSURL *url = [self judgeRoutes:_title];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:10];
     
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError){
-        
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        NSMutableArray *dataTime = [[NSMutableArray alloc] init];
-        NSMutableArray *tideHigh = [[NSMutableArray alloc] init];
-        
-        NSString *pubtime = [array[0] objectForKey:@"publishtime"];
-        NSString *pubtime2=[pubtime substringToIndex:16];
-        releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];
-        
-        for (NSDictionary *dic in array) {
-            NSString *dateString1 = [dic objectForKey:@"datatime"];
-            NSString *dateString = [self stringForAnaly:dateString1];
-            
-            NSString *tideString1 = [dic objectForKey:@"power"];
-            CGFloat tideString2 = [tideString1 doubleValue];
-            NSString *tideString = [NSString stringWithFormat:@"%.2f",tideString2];
-            
-            [dataTime addObject:dateString];
-            
-            [tideHigh addObject:tideString];
-        }
-        
         cell.data1.text = dataTime[indexPath.row];
         cell.data2.text = tideHigh[indexPath.row];
         
-        NSLog(@"数据的行数:%lu",(unsigned long)dataTime.count);
-        
-        
-    }];
+       
 }
 
 

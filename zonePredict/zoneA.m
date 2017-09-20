@@ -9,7 +9,7 @@
 #import "zoneA.h"
 #import "PartitionViewController.h"
 #import "OFeiCommon.h"
-
+#import "MyRequest.h"
 #define kwidth self.bounds.size.width
 #define kheight self.bounds.size.height
 
@@ -44,11 +44,6 @@
     windUnit.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:16];
     [self addSubview:windUnit];
     
-    //    UILabel *windAvgUnit = [[UILabel alloc]initWithFrame:CGRectMake(KWight*0.3, KHight*0.52, 100, 40)];
-    //    windAvgUnit.text = @"m/s";
-    //    windAvgUnit.textColor = [UIColor whiteColor];
-    //    windAvgUnit.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:16];
-    //    [self.view addSubview:windAvgUnit];
     
     UILabel *waveContent = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width*0.73, self.bounds.size.height*0.35, 100, 40)];
     waveContent.text = @"浪";
@@ -56,20 +51,7 @@
     waveContent.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:18];
     [self addSubview:waveContent];
     
-//    UILabel *maxWave = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width*0.54, self.bounds.size.height*0.45, 100, 40)];
-//    maxWave.text = @"最大小";
-//    maxWave.textColor = [UIColor whiteColor];
-//    maxWave.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:16];
-//    [self addSubview:maxWave];
-    
-//    UILabel *minWave = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width*0.63, self.bounds.size.height*0.5, 100, 40)];
-//    minWave.textColor = [UIColor whiteColor];
-//    minWave.text = @"方向";
-//    minWave.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:16];
-//    [self addSubview:minWave];
-
-    
-    //风等级
+     //风等级
     _wind = [[UILabel alloc]initWithFrame:CGRectMake(self.bounds.size.width*0.2, self.bounds.size.height*0.4, 100, 40)];
     _wind.textColor = [UIColor whiteColor];
     _wind.font = [UIFont fontWithName:@"Arial-BoldItalicMT" size:18];
@@ -275,15 +257,13 @@
 
 - (void)getUrl:(NSString *)_title
 {
-    NSURL *url_24 = [self judgeZone24:@"A区"];
-    NSURLRequest *requst_24 = [NSURLRequest requestWithURL:url_24 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    [NSURLConnection sendAsynchronousRequest:requst_24 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
+    NSString *url_24 = [self judgeZone24WithStr:@"A区"];
+//    NSURLRequest *requst_24 = [NSURLRequest requestWithURL:url_24 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+    [MyRequest GET:url_24 CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+        NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         NSString *date=[rootDic[0] objectForKey:@"publishtime"];
         NSString *pubtime=[date substringToIndex:16];
-//        _releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime];
+        //        _releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime];
         NSNumber *waveavg = [rootDic[0] objectForKey:@"power"];
         NSNumber *minwave = [rootDic[1] objectForKey:@"power"];
         NSNumber *maxwave = [rootDic[2] objectForKey:@"power"];
@@ -311,52 +291,54 @@
             NSLog(@"%@",wavearr[0]);
             _waveDirection.text = [NSString stringWithFormat:@"%@",wavearr[0]];
         }
-         _wave.text = [NSString stringWithFormat:@"%.2f-%.2fm",wavemin,wavemax];
+        _wave.text = [NSString stringWithFormat:@"%.2f-%.2fm",wavemin,wavemax];
         
         
         if(rootDic.count>4){
-        NSNumber *avgwind = [rootDic[3] objectForKey:@"power"];
-        NSNumber *minwind = [rootDic[4] objectForKey:@"power"];
-        NSString *minlevel = [self level:minwind];
-        NSString *dirwind = [rootDic[4] objectForKey:@"dir"];
-        const char *windchars = [dirwind cStringUsingEncoding:NSUTF8StringEncoding];
-        NSString *windnew;
-        NSString *windnew2;
-        NSMutableArray *windarr = [[NSMutableArray alloc]init];
-        int windlen = strlen(windchars);
-        for (int i = 0; i < windlen; i++) {
-            windnew = [NSString stringWithFormat:@"%c",windchars[i]];
-            windnew2 = [self word:windnew];
-            [windarr addObject:windnew2];
-        }
-        NSLog(@"%d",windlen);
-        if (windlen == 3) {
-            NSLog(@"%@%@偏%@",windarr[2],windarr[1],windarr[0]);
-            _windDirection.text = [NSString stringWithFormat:@"%@%@偏%@",windarr[2],windarr[1],windarr[0]];
-        }else if(windlen == 2){
-            NSLog(@"%@偏%@",windarr[1],windarr[0]);
-            _windDirection.text = [NSString stringWithFormat:@"%@偏%@",windarr[1],windarr[0]];
-        }else if (windlen == 1){
-            NSLog(@"%@",windarr[0]);
-            _windDirection.text = [NSString stringWithFormat:@"%@",windarr[0]];
-        }
-        
-        
-        _wind.text = minlevel;
-      
+            NSNumber *avgwind = [rootDic[3] objectForKey:@"power"];
+            NSNumber *minwind = [rootDic[4] objectForKey:@"power"];
+            NSString *minlevel = [self level:minwind];
+            NSString *dirwind = [rootDic[4] objectForKey:@"dir"];
+            const char *windchars = [dirwind cStringUsingEncoding:NSUTF8StringEncoding];
+            NSString *windnew;
+            NSString *windnew2;
+            NSMutableArray *windarr = [[NSMutableArray alloc]init];
+            int windlen = strlen(windchars);
+            for (int i = 0; i < windlen; i++) {
+                windnew = [NSString stringWithFormat:@"%c",windchars[i]];
+                windnew2 = [self word:windnew];
+                [windarr addObject:windnew2];
+            }
+            NSLog(@"%d",windlen);
+            if (windlen == 3) {
+                NSLog(@"%@%@偏%@",windarr[2],windarr[1],windarr[0]);
+                _windDirection.text = [NSString stringWithFormat:@"%@%@偏%@",windarr[2],windarr[1],windarr[0]];
+            }else if(windlen == 2){
+                NSLog(@"%@偏%@",windarr[1],windarr[0]);
+                _windDirection.text = [NSString stringWithFormat:@"%@偏%@",windarr[1],windarr[0]];
+            }else if (windlen == 1){
+                NSLog(@"%@",windarr[0]);
+                _windDirection.text = [NSString stringWithFormat:@"%@",windarr[0]];
+            }
+            
+            
+            _wind.text = minlevel;
+            
         }else{
             _windDirection_72.text=@" ";
             _wind_72.text=@" ";
-
+            
         }
+
+    } failure:^(NSError *error) {
         
     }];
+ 
     
-    NSURL *url_48 = [self judgeZone48:@"A区"];
-    NSURLRequest *requst_48 = [NSURLRequest requestWithURL:url_48 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    [NSURLConnection sendAsynchronousRequest:requst_48 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+    NSString *url_48 = [self judgeZone48WithStr:@"A区"];
+//    NSURLRequest *requst_48 = [NSURLRequest requestWithURL:url_48 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+    [MyRequest GET:url_48 CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+           NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         NSNumber *waveavg = [rootDic[0] objectForKey:@"power"];
         NSNumber *minwave = [rootDic[1] objectForKey:@"power"];
         NSNumber *maxwave = [rootDic[2] objectForKey:@"power"];
@@ -389,52 +371,50 @@
         
         if (rootDic.count>4) {
             
-        NSNumber *avgwind = [rootDic[3] objectForKey:@"power"];
-        NSNumber *minwind = [rootDic[4] objectForKey:@"power"];
-        NSString *minlevel = [self level:minwind];
-        NSString *dirwind = [rootDic[4] objectForKey:@"dir"];
-        const char *windchars = [dirwind cStringUsingEncoding:NSUTF8StringEncoding];
-        NSString *windnew;
-        NSString *windnew2;
-        NSMutableArray *windarr = [[NSMutableArray alloc]init];
-        int windlen = strlen(windchars);
-        for (int i = 0; i < windlen; i++) {
-            windnew = [NSString stringWithFormat:@"%c",windchars[i]];
-            windnew2 = [self word:windnew];
-            [windarr addObject:windnew2];
-        }
-        NSLog(@"%d",windlen);
-        if (windlen == 3) {
-            NSLog(@"%@%@偏%@",windarr[2],windarr[1],windarr[0]);
-            _windDirection_48.text = [NSString stringWithFormat:@"%@%@偏%@",windarr[2],windarr[1],windarr[0]];
-        }else if(windlen == 2){
-            NSLog(@"%@偏%@",windarr[1],windarr[0]);
-            _windDirection_48.text = [NSString stringWithFormat:@"%@偏%@",windarr[1],windarr[0]];
-        }else if (windlen == 1){
-            NSLog(@"%@",windarr[0]);
-            _windDirection_48.text = [NSString stringWithFormat:@"%@",windarr[0]];
-        }
-        
-        
-        _wind_48.text = minlevel;
-       
+            NSNumber *avgwind = [rootDic[3] objectForKey:@"power"];
+            NSNumber *minwind = [rootDic[4] objectForKey:@"power"];
+            NSString *minlevel = [self level:minwind];
+            NSString *dirwind = [rootDic[4] objectForKey:@"dir"];
+            const char *windchars = [dirwind cStringUsingEncoding:NSUTF8StringEncoding];
+            NSString *windnew;
+            NSString *windnew2;
+            NSMutableArray *windarr = [[NSMutableArray alloc]init];
+            int windlen = strlen(windchars);
+            for (int i = 0; i < windlen; i++) {
+                windnew = [NSString stringWithFormat:@"%c",windchars[i]];
+                windnew2 = [self word:windnew];
+                [windarr addObject:windnew2];
+            }
+            NSLog(@"%d",windlen);
+            if (windlen == 3) {
+                NSLog(@"%@%@偏%@",windarr[2],windarr[1],windarr[0]);
+                _windDirection_48.text = [NSString stringWithFormat:@"%@%@偏%@",windarr[2],windarr[1],windarr[0]];
+            }else if(windlen == 2){
+                NSLog(@"%@偏%@",windarr[1],windarr[0]);
+                _windDirection_48.text = [NSString stringWithFormat:@"%@偏%@",windarr[1],windarr[0]];
+            }else if (windlen == 1){
+                NSLog(@"%@",windarr[0]);
+                _windDirection_48.text = [NSString stringWithFormat:@"%@",windarr[0]];
+            }
+            
+            
+            _wind_48.text = minlevel;
+            
         }else{
             _windDirection_72.text=@" ";
             _wind_72.text=@" ";
         }
+
+    } failure:^(NSError *error) {
         
         
     }];
+ 
     
-    NSURL *url_72 = [self judgeZone72:@"A区"];
-    NSURLRequest *requst_72 = [NSURLRequest requestWithURL:url_72 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    [NSURLConnection sendAsynchronousRequest:requst_72 queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        
-        NSLog(@"zeyzeyzye---%@",connectionError);
-        
-        NSMutableArray *rootDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
+    NSString *url_72 = [self judgeZone72WithStr:@"A区"];
+//    NSURLRequest *requst_72 = [NSURLRequest requestWithURL:url_72 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+    [MyRequest GET:url_72 CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+          NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         
         
         NSNumber *waveavg = [rootDic[0] objectForKey:@"power"];
@@ -465,7 +445,7 @@
             _waveDirection_72.text = [NSString stringWithFormat:@"%@",wavearr[0]];
         }
         
-         _wave_72.text = [NSString stringWithFormat:@"%.2f-%.2fm",wavemin,wavemax];
+        _wave_72.text = [NSString stringWithFormat:@"%.2f-%.2fm",wavemin,wavemax];
         
         
         if (rootDic.count>4) {
@@ -495,51 +475,82 @@
                 _windDirection_72.text = [NSString stringWithFormat:@"%@",windarr[0]];
             }
             
-
+            
             _wind_72.text = minlevel;
-          
+            
         }else{
             _windDirection_72.text=@" ";
             _wind_72.text=@" ";
         }
         
-        
+    } failure:^(NSError *error) {
         
         
     }];
+ 
     
 }
 
 
 
 #pragma mark - 判断url
-- (NSURL *)judgeZone24:(NSString *)_title
+- (NSURL *)judgeZone24:(NSString *)title
 {
     NSURL *url;
-    if ([_title isEqualToString:@"A区"]) {
+    if ([title isEqualToString:@"A区"]) {
         url = [NSURL URLWithString:urlZoneA24];
-    }else if ([_title isEqualToString:@"B区"]){
+    }else if ([title isEqualToString:@"B区"]){
         url = [NSURL URLWithString:urlZoneB24];
-    }else if ([_title isEqualToString:@"C区"]){
+    }else if ([title isEqualToString:@"C区"]){
         url = [NSURL URLWithString:urlZoneC24];
-    }else if ([_title isEqualToString:@"D区"]){
+    }else if ([title isEqualToString:@"D区"]){
         url = [NSURL URLWithString:urlZoneD24];
     }
     return url;
 }
+- (NSString *)judgeZone24WithStr:(NSString *)title
+{
+
+    if ([title isEqualToString:@"A区"]) {
+       return  urlZoneA24;
+    }else if ([title isEqualToString:@"B区"]){
+       return urlZoneB24;
+    }else if ([title isEqualToString:@"C区"]){
+        return urlZoneC24;
+    }else if ([title isEqualToString:@"D区"]){
+        return urlZoneD24;
+    }
+    return nil;
+}
 
 
 
-- (NSURL *)judgeZone48:(NSString *)_title
+- (NSString *)judgeZone48WithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"A区"]) {
+        return urlZoneA48;
+    }else if ([title isEqualToString:@"B区"]){
+        return urlZoneB48;
+    }else if ([title isEqualToString:@"C区"]){
+       return urlZoneC48;
+    }else if ([title isEqualToString:@"D区"]){
+        return urlZoneD48;
+    }
+    return nil;
+}
+
+
+- (NSURL *)judgeZone48:(NSString *)title
 {
     NSURL *url;
-    if ([_title isEqualToString:@"A区"]) {
+    if ([title isEqualToString:@"A区"]) {
         url = [NSURL URLWithString:urlZoneA48];
-    }else if ([_title isEqualToString:@"B区"]){
+    }else if ([title isEqualToString:@"B区"]){
         url = [NSURL URLWithString:urlZoneB48];
-    }else if ([_title isEqualToString:@"C区"]){
+    }else if ([title isEqualToString:@"C区"]){
         url = [NSURL URLWithString:urlZoneC48];
-    }else if ([_title isEqualToString:@"D区"]){
+    }else if ([title isEqualToString:@"D区"]){
         url = [NSURL URLWithString:urlZoneD48];
     }
     return url;
@@ -547,21 +558,34 @@
 
 
 
-- (NSURL *)judgeZone72:(NSString *)_title
+- (NSURL *)judgeZone72:(NSString *)title
 {
     NSURL *url;
-    if ([_title isEqualToString:@"A区"]) {
+    if ([title isEqualToString:@"A区"]) {
         url = [NSURL URLWithString:urlZoneA72];
-    }else if ([_title isEqualToString:@"B区"]){
+    }else if ([title isEqualToString:@"B区"]){
         url = [NSURL URLWithString:urlZoneB72];
-    }else if ([_title isEqualToString:@"C区"]){
+    }else if ([title isEqualToString:@"C区"]){
         url = [NSURL URLWithString:urlZoneC72];
-    }else if ([_title isEqualToString:@"D区"]){
+    }else if ([title isEqualToString:@"D区"]){
         url = [NSURL URLWithString:urlZoneD72];
     }
     return url;
 }
-
+- (NSString *)judgeZone72WithStr:(NSString *)title
+{
+    NSString *url;
+    if ([title isEqualToString:@"A区"]) {
+        return urlZoneA72;
+    }else if ([title isEqualToString:@"B区"]){
+       return urlZoneB72;
+    }else if ([title isEqualToString:@"C区"]){
+        return urlZoneC72;
+    }else if ([title isEqualToString:@"D区"]){
+        return urlZoneD72;
+    }
+    return url;
+}
 
 //风级转换
 - (NSString *)word:(NSString *)dirdir
