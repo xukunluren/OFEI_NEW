@@ -551,8 +551,7 @@
 #pragma mark -- 获取数据
 -(void)getUrl
 {
-    NSURL *url_24 = [NSURL URLWithString:Knormal24];
-    NSURLRequest *requst_24 = [NSURLRequest requestWithURL:url_24 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+    
     
     [MyRequest GET:Knormal24 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
@@ -579,8 +578,7 @@
         
     }];
  
-    NSURL *url_48 = [NSURL URLWithString:Knormal48];
-    NSURLRequest *requst_48 = [NSURLRequest requestWithURL:url_48 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+   
     
     [MyRequest GET:Knormal48 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
@@ -592,7 +590,7 @@
         
         if (weather48.length>3) {
             wea48 =[weather48 substringToIndex:1];
-            //            NSLog(@"zeyzeyzey-----jie--%@",wea24);
+ 
         }
         
         UIImageView *weather2 = [[UIImageView alloc]initWithFrame:CGRectMake(KWight*0.4, KHight*0.23, KWight*0.28, KWight*0.28)];
@@ -645,8 +643,7 @@
         
     }];
  
-    NSURL *url_72 = [NSURL URLWithString:Knormal72];
-    NSURLRequest *requst_72 = [NSURLRequest requestWithURL:url_72 cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
+    
     [MyRequest GET:Knormal72 CacheTime:300 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         NSMutableArray *rootDic = [NSMutableArray arrayWithObject:jsonDic].firstObject;
         weather72 = [rootDic[0] objectForKey:@"weather"];
