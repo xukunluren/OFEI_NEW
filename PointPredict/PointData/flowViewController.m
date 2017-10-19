@@ -566,9 +566,7 @@
     
     [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
         _array = [NSMutableArray arrayWithObject:jsonDic].firstObject;
-        
-        
-        
+
         NSString *pubtime = [_array[0] objectForKey:@"publishtime"];
         NSString *pubtime2=[pubtime substringToIndex:16];
         releaseTime.text=[NSString stringWithFormat:@"发布时间:%@",pubtime2];

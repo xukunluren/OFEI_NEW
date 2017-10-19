@@ -12,7 +12,7 @@
 #import "fiveTableViewCell.h"
 #import "PellTableViewSelect.h"
 #import "NormalViewController.h"
-
+#import "MyRequest.h"
 @interface longTideViewController ()<UITableViewDataSource,UITableViewDelegate>
 
 @end
@@ -23,8 +23,11 @@
     NSString *_title;
     UILabel *_titleLabel;
     NSMutableArray *_dateArray;
-    
-    NSMutableArray *_arrCount;
+    NSMutableArray *tideHTime ;
+    NSMutableArray *tideHPosition  ;
+    NSMutableArray *tideDTime ;
+    NSMutableArray *tideDPosition ;
+    NSInteger _arrCount;
 }
 
 
@@ -41,8 +44,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+ 
     CGRect mainView = [UIScreen mainScreen].bounds;
+  
     //设置背景图片
     UIImageView  *imageView = [[UIImageView alloc] initWithFrame:mainView];
     imageView.image = [UIImage imageNamed:@"mainBackImage"];
@@ -59,13 +63,14 @@
     [self.view addSubview:_longTideTable];
     
     _dateArray = [[NSMutableArray alloc] init];
-    _arrCount = [[NSMutableArray alloc]init];
+//    _arrCount = [[NSMutableArray alloc]init];
     
     _title = @"A点";
+    [self getArrayCount:_title];
     self.tabBarController.tabBar.hidden = NO;
     [self setButton];
     [self setNavTitle:_title];
-    [self getArrayCount];
+   
     
 }
 
@@ -77,29 +82,6 @@
 //}
 -(void)setNavTitle:(NSString *)title
 {
-
-    
-//    UIView *middle = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
-//    UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
-//    select.frame = CGRectMake(15, 0, 40, 40);
-//    [select setImage:[UIImage imageNamed:@"SortDown50@2x.png"] forState:UIControlStateNormal];
-//    [select addTarget:self action:@selector(selectPoint) forControlEvents:UIControlEventTouchUpInside];
-//    
-//    UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-//    label.backgroundColor = [UIColor clearColor];
-//    label.frame = CGRectMake(0, 10, 40, 40);
-//    label.font = [UIFont boldSystemFontOfSize:16.0];
-//    label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor]; // change this color
-//    _titleLabel = label;
-//    _titleLabel.text = _title;
-//    [_titleLabel sizeToFit];
-//    [middle addSubview:select];
-//    [middle addSubview:label];
-//    
-//    [label sizeToFit];
-//    self.navigationItem.titleView = middle;
-    
     UIButton *select = [UIButton buttonWithType:UIButtonTypeCustom];
     select.frame = CGRectMake(0, 0, 60, 40);
     _titleLabel.text = _title;
@@ -170,7 +152,8 @@
         [self viewDidAppear:YES];
         NSLog(@"%@",_title);
         [self setNavTitle:_title];
-        [self.longTideTable reloadData];
+        [self getArrayCount:_title];
+     
         [self judgePoint:_point];
     } animated:YES];
 }
@@ -184,13 +167,7 @@
     viewaa.backgroundColor =KTextColor;
     
     CGFloat wight = self.view.frame.size.width;
-    
-//    UILabel *longTide = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, wight, 30)];
-//    [longTide setText:@"长期潮位表"];
-//    [longTide setFont:[UIFont systemFontOfSize:14.0]];
-//    [longTide setTextAlignment:NSTextAlignmentCenter];
-//    [viewaa addSubview:longTide];
-//    
+
     UILabel *datelabel = [[UILabel alloc] initWithFrame:CGRectMake(0,KHight*0.03, 0.3*wight, 20)];
     [datelabel setText:@"日期"];
     [datelabel setFont:[UIFont systemFontOfSize:12.0]];
@@ -242,49 +219,19 @@
 
 
 //得到数组的长度
--(void)getArrayCount{
+-(void)getArrayCount:(NSString*)title{
     
-    NSURL *url = [self judgePoint:_title];
+    NSString *url = [self judgePointWithUrl:title];
     NSLog(@"url是===%@",url);
-    
-    //第二步，通过URL创建网络请求
-    
-    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:100];
-    
-    //NSURLRequest初始化方法第一个参数：请求访问路径，第二个参数：缓存协议，第三个参数：网络请求超时时间（秒）
-    //第三步，连接服务器
-    
-    NSData *received = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-    
-    
-    _arrCount = [NSJSONSerialization JSONObjectWithData:received options:NSJSONReadingMutableContainers error:nil];
-//    [_datetimeArray removeAllObjects];
-    
-    
-}
-
-
-
-
-
-- (void)configureCell:(fiveTableViewCell *)cell forIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"标题是===%@",_title);
-    NSURL *url = [self judgePoint:_title];
-    NSURLRequest *requst = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10];
-    //异步链接(形式1,较少用)
-    [NSURLConnection sendAsynchronousRequest:requst queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        // 解析
-        NSMutableArray *array = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
-        
-//        dateArray = [[NSMutableArray alloc] init];
-        NSMutableArray *tideHTime = [[NSMutableArray alloc] init];
-        NSMutableArray *tideHPosition = [[NSMutableArray alloc] init];
-        NSMutableArray *tideDTime = [[NSMutableArray alloc] init];
-        NSMutableArray *tideDPosition = [[NSMutableArray alloc] init];
+    [MyRequest GET:url CacheTime:21600 isLoadingView:@"正在加载" success:^(id responseObject, BOOL succe, NSDictionary *jsonDic) {
+         NSMutableArray  *array= [NSMutableArray arrayWithObject:jsonDic].firstObject;
+        tideHTime = [[NSMutableArray alloc] init];
+        tideHPosition = [[NSMutableArray alloc] init];
+        tideDTime = [[NSMutableArray alloc] init];
+        tideDPosition = [[NSMutableArray alloc] init];
         for (NSDictionary *dic in array) {
             NSString *varName = [dic objectForKey:@"varname"];
             if ([varName isEqualToString:@"TIDEDOWN"]) {
-                
                 
                 NSString *dateString1 = [dic objectForKey:@"datatime"];
                 NSString *dateString = [self stringForAnaly:dateString1].firstObject;
@@ -312,7 +259,7 @@
                 [_dateArray addObject:dateString];
                 [tideHPosition addObject:tideH];
                 [tideHTime addObject:time];
-        
+                
             }
             
         }
@@ -322,18 +269,61 @@
         tideDPosition =(NSMutableArray *)[[tideDPosition reverseObjectEnumerator] allObjects];
         tideHTime = (NSMutableArray *) [[tideHTime reverseObjectEnumerator] allObjects];
         tideDTime = (NSMutableArray *) [[tideDTime reverseObjectEnumerator] allObjects];
-          NSLog(@"ceshi数据大小是多少：%lu",(unsigned long)tideHTime.count);
+        NSLog(@"ceshi数据大小是多少：%lu",(unsigned long)tideHTime.count);
+       
         
-        cell.data1.text = _dateArray[indexPath.row];
-        cell.data2.text = tideHTime[indexPath.row];
-        cell.data3.text = tideHPosition[indexPath.row];
+        [tideHTime enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if([obj isEqualToString:@" "])
+            {
+                *stop = YES;
+                [tideHTime removeObject:obj];
+            }
+        }];
         
-        cell.data4.text = tideDTime[indexPath.row];
-        cell.data5.text = tideDPosition[indexPath.row];
+        [tideHPosition enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if([obj isEqualToString:@" "])
+            {
+                *stop = YES;
+                [tideHPosition removeObject:obj];
+            }
+        }];
+        
+        [tideDTime enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if (idx == 0) {
+                //为第一个数据的时候不作处理
+            }else{
+                if([obj isEqualToString:@" "])
+                {
+                    *stop = YES;
+                    [tideDTime removeObject:obj];
+                }
+            }
+        }];
+        
+        [tideDPosition enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            if (idx == 0) {
+                //为第一个数据的时候不作处理
+            }else{
+                if([obj isEqualToString:@" "])
+                {
+                    *stop = YES;
+                    [tideDPosition removeObject:obj];
+                }
+            }
+        }];
+         _arrCount  = MIN(tideDTime.count, tideDPosition.count);
+       [self.longTideTable reloadData];
+    } failure:^(NSError *error) {
         
     }];
-
+    
+ 
 }
+
+
+
+
+
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
@@ -350,7 +340,7 @@
 
 //显示条数
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return _arrCount.count;
+    return _arrCount;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -368,8 +358,13 @@
         //通过xib的名称加载自定义的cell
         cell = [[[NSBundle mainBundle] loadNibNamed:@"fiveTableViewCell" owner:self options:nil] lastObject];
     }
+    cell.data1.text = _dateArray[indexPath.row];
+    cell.data2.text = tideHTime[indexPath.row];
+    cell.data3.text = tideHPosition[indexPath.row];
     
-    [self configureCell:cell forIndexPath:indexPath];
+    cell.data4.text = tideDTime[indexPath.row];
+    cell.data5.text = tideDPosition[indexPath.row];
+//    [self configureCell:cell forIndexPath:indexPath];
     return cell;
 }
 
@@ -405,6 +400,24 @@
     }
     if ([point isEqualToString:@"D点"]) {
         url= [NSURL URLWithString:@KPointLTideD_M];
+    }
+    return url;
+}
+
+-(NSString *)judgePointWithUrl:(NSString *)point
+{
+    NSString *url;
+    if ([point isEqualToString:@"A点"]) {
+        url= [NSString stringWithFormat:@KPointLTideA_M];
+    }
+    if ([point isEqualToString:@"B点"]) {
+        url= [NSString stringWithFormat:@KPointLTideB_M];
+    }
+    if ([point isEqualToString:@"C点"]) {
+        url= [NSString stringWithFormat:@KPointLTideC_M];
+    }
+    if ([point isEqualToString:@"D点"]) {
+        url= [NSString stringWithFormat:@KPointLTideD_M];
     }
     return url;
 }
